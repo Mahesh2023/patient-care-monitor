@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.git/
+.gitignore
+models/
+*.task
+data/session_logs/*.jsonl
+.DS_Store
+Thumbs.db
+research_content.md
