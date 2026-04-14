@@ -19,9 +19,17 @@ import math
 from typing import Dict, Optional, Tuple, List
 from dataclasses import dataclass
 
-import cv2
 import numpy as np
-import mediapipe as mp
+
+# cv2 and mediapipe are imported lazily inside FaceAnalyzer to allow
+# importing dataclasses (FaceAnalysisResult, AUEstimates) without
+# requiring opencv/mediapipe at import time (e.g., cloud dashboard).
+try:
+    import cv2
+    import mediapipe as mp
+    _HAS_CV2 = True
+except ImportError:
+    _HAS_CV2 = False
 
 
 @dataclass
@@ -161,6 +169,12 @@ class FaceAnalyzer:
             model_path: Path to face_landmarker.task model file.
                         Defaults to models/face_landmarker.task relative to project root.
         """
+        if not _HAS_CV2:
+            raise ImportError(
+                "FaceAnalyzer requires opencv-python and mediapipe. "
+                "Install with: pip install opencv-python mediapipe"
+            )
+
         if model_path is None:
             # Find model relative to this file's location
             base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
