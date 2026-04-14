@@ -2,6 +2,8 @@
 
 **A scientifically-grounded multimodal monitoring system for caregivers**
 
+> **Live Demo:** [https://fa5353ef4297ce.lhr.life](https://fa5353ef4297ce.lhr.life)
+
 This system combines facial analysis, pain detection, heart rate estimation, voice analysis, and text sentiment to provide caregivers with real-time patient comfort and distress assessment.
 
 ## Architecture
