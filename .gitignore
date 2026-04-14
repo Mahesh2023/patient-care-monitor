@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Session logs (generated at runtime)
+data/session_logs/*.jsonl
+
+# Models (downloaded separately)
+models/*.task
+
+# Distribution
+dist/
+build/
+*.egg-info/
