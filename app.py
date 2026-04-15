@@ -419,13 +419,6 @@ custom_css = """
 
 with gr.Blocks(
     title="Patient Care Monitor",
-    theme=gr.themes.Soft(
-        primary_hue="blue",
-        secondary_hue="slate",
-        neutral_hue="slate",
-        font=gr.themes.GoogleFont("Inter"),
-    ),
-    css=custom_css,
 ) as demo:
 
     gr.Markdown(
@@ -451,7 +444,6 @@ with gr.Blocks(
                         streaming=True,
                         type="numpy",
                         label="Webcam Feed",
-                        mirror_webcam=True,
                     )
                 with gr.Column(scale=3):
                     annotated_output = gr.Image(
@@ -522,4 +514,14 @@ with gr.Blocks(
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
-    demo.launch(server_name="0.0.0.0", server_port=port)
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=port,
+        theme=gr.themes.Soft(
+            primary_hue="blue",
+            secondary_hue="slate",
+            neutral_hue="slate",
+            font=gr.themes.GoogleFont("Inter"),
+        ),
+        css=custom_css,
+    )
