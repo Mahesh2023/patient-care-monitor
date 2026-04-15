@@ -10,6 +10,7 @@ import json
 import os
 import sys
 import time
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import numpy as np
+import cv2
 
 try:
     import streamlit as st
@@ -25,7 +27,13 @@ except ImportError:
     print("Then run: streamlit run dashboard.py")
     sys.exit(1)
 
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase, WebRtcMode
+import av
+
 from config import DISCLAIMERS, SystemConfig
+from modules.face_analyzer import FaceAnalyzer, FaceAnalysisResult
+from modules.pain_detector import PainDetector, PainLevel
+from modules.fusion_engine import FusionEngine, PatientAlertLevel
 from modules.text_sentiment import TextSentimentAnalyzer
 from utils.session_logger import SessionLogger
 
@@ -94,6 +102,135 @@ if "notes_history" not in st.session_state:
     st.session_state.notes_history = []
 
 
+# ─── Video Processor for WebRTC ──────────────────────────────
+class PatientMonitorProcessor(VideoProcessorBase):
+    """Processes each webcam frame through the face analysis + pain pipeline."""
+
+    def __init__(self):
+        self._face_analyzer = FaceAnalyzer()
+        self._pain_detector = PainDetector()
+        self._fusion_engine = FusionEngine()
+        self._lock = threading.Lock()
+        # Shared state read by the Streamlit UI thread
+        self.result_state = {
+            "face_detected": False,
+            "comfort_level": 0.5,
+            "pain_pspi": 0.0,
+            "pain_label": "None",
+            "arousal_level": 0.5,
+            "engagement_level": 0.5,
+            "observations": [],
+            "alert_level": "normal",
+            "alert_reasons": [],
+            "aus": {},
+            "brow_height_left": 0.0,
+            "brow_height_right": 0.0,
+            "eye_aspect_ratio_left": 0.0,
+            "eye_aspect_ratio_right": 0.0,
+            "mouth_aspect_ratio": 0.0,
+        }
+
+    def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
+        img = frame.to_ndarray(format="bgr24")
+        t = time.time()
+
+        # Run face analysis
+        face_result = self._face_analyzer.analyze(img, timestamp=t)
+
+        # Run pain detection
+        pain_result = self._pain_detector.assess(
+            face_result.aus if face_result.face_detected else None, timestamp=t
+        )
+
+        # Run fusion
+        fused = self._fusion_engine.fuse(
+            face_result=face_result,
+            pain_assessment=pain_result,
+            timestamp=t,
+        )
+
+        # Draw overlay on the frame
+        img = self._draw_overlay(img, face_result, pain_result, fused)
+
+        # Update shared state for the UI
+        with self._lock:
+            self.result_state = {
+                "face_detected": face_result.face_detected,
+                "comfort_level": fused.comfort_level,
+                "pain_pspi": pain_result.pspi_score,
+                "pain_label": pain_result.pain_level.value,
+                "arousal_level": fused.arousal_level,
+                "engagement_level": fused.engagement_level,
+                "observations": list(fused.observations),
+                "alert_level": fused.alert_level.value,
+                "alert_reasons": list(fused.alert_reasons),
+                "aus": face_result.aus.to_dict() if face_result.aus else {},
+                "brow_height_left": face_result.brow_height_left,
+                "brow_height_right": face_result.brow_height_right,
+                "eye_aspect_ratio_left": face_result.eye_aspect_ratio_left,
+                "eye_aspect_ratio_right": face_result.eye_aspect_ratio_right,
+                "mouth_aspect_ratio": face_result.mouth_aspect_ratio,
+            }
+
+        return av.VideoFrame.from_ndarray(img, format="bgr24")
+
+    def _draw_overlay(self, img, face_result, pain_result, fused):
+        """Draw monitoring HUD on the video frame."""
+        h, w = img.shape[:2]
+        overlay = img.copy()
+
+        # Semi-transparent status bar at top
+        cv2.rectangle(overlay, (0, 0), (w, 38), (30, 30, 30), -1)
+        cv2.addWeighted(overlay, 0.7, img, 0.3, 0, img)
+
+        # Status text
+        if face_result.face_detected:
+            cv2.putText(img, "FACE DETECTED", (10, 26),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1)
+        else:
+            cv2.putText(img, "NO FACE", (10, 26),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1)
+
+        # Pain level
+        pain_color = (0, 255, 0)  # green
+        if pain_result.pain_level == PainLevel.MILD:
+            pain_color = (0, 255, 255)  # yellow
+        elif pain_result.pain_level == PainLevel.MODERATE:
+            pain_color = (0, 140, 255)  # orange
+        elif pain_result.pain_level == PainLevel.SEVERE:
+            pain_color = (0, 0, 255)  # red
+
+        cv2.putText(img, f"Pain: {pain_result.pspi_score:.1f} ({pain_result.pain_level.value})",
+                    (w // 2 - 80, 26), cv2.FONT_HERSHEY_SIMPLEX, 0.55, pain_color, 1)
+
+        # Comfort bar at bottom
+        bar_y = h - 30
+        comfort_pct = fused.comfort_level
+        bar_w = int(w * 0.4 * comfort_pct)
+        cv2.rectangle(img, (10, bar_y), (10 + int(w * 0.4), bar_y + 16), (60, 60, 60), -1)
+        cv2.rectangle(img, (10, bar_y), (10 + bar_w, bar_y + 16), (0, 200, 0), -1)
+        cv2.putText(img, f"Comfort: {int(comfort_pct * 100)}%", (10, bar_y - 4),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.45, (200, 200, 200), 1)
+
+        # Alert level
+        if fused.alert_level != PatientAlertLevel.NORMAL:
+            alert_color = (0, 255, 255)
+            if fused.alert_level == PatientAlertLevel.CONCERN:
+                alert_color = (0, 140, 255)
+            elif fused.alert_level == PatientAlertLevel.URGENT:
+                alert_color = (0, 0, 255)
+            cv2.putText(img, f"ALERT: {fused.alert_level.value.upper()}",
+                        (w - 220, 26), cv2.FONT_HERSHEY_SIMPLEX, 0.55, alert_color, 2)
+
+        # Draw face landmarks if detected
+        if face_result.face_detected and face_result.landmarks is not None:
+            for i in range(0, len(face_result.landmarks), 3):
+                pt = face_result.landmarks[i]
+                cv2.circle(img, (int(pt[0]), int(pt[1])), 1, (0, 200, 200), -1)
+
+        return img
+
+
 # ─── Sidebar ─────────────────────────────────────────────────
 with st.sidebar:
     st.title("Patient Care Monitor")
@@ -122,132 +259,149 @@ if mode == "Dashboard":
 
     st.markdown(
         '<div class="disclaimer-box">'
-        'This dashboard displays behavioral observations and physiological indicators. '
-        'All readings should supplement, not replace, professional clinical assessment. '
+        'This dashboard uses your browser webcam for real-time facial analysis. '
+        'All processing happens on the server -- no video is stored. '
+        'Readings should supplement, not replace, professional clinical assessment. '
         'See Scientific Disclaimers in the sidebar.'
         '</div>',
         unsafe_allow_html=True,
     )
 
-    # Generate demo data for display
-    if st.button("Generate Demo Data", type="primary"):
-        states = []
-        scenarios = [
-            ("Resting", 20, (0, 1), (0.7, 0.9), (0.2, 0.3), (65, 75)),
-            ("Mild discomfort", 15, (1, 3), (0.4, 0.6), (0.4, 0.5), (70, 85)),
-            ("Pain episode", 10, (4, 8), (0.1, 0.3), (0.6, 0.8), (80, 105)),
-            ("Recovery", 15, (1, 3), (0.4, 0.6), (0.3, 0.5), (70, 85)),
-            ("Comfortable", 20, (0, 1), (0.6, 0.85), (0.2, 0.35), (62, 78)),
-        ]
-        t = 0
-        for name, dur, pain_r, comfort_r, arousal_r, hr_r in scenarios:
-            for _ in range(dur):
-                states.append({
-                    "timestamp": t,
-                    "scenario": name,
-                    "pain_level": np.random.uniform(*pain_r),
-                    "comfort_level": np.random.uniform(*comfort_r),
-                    "arousal_level": np.random.uniform(*arousal_r),
-                    "heart_rate": np.random.uniform(*hr_r),
-                    "engagement_level": np.random.uniform(0.5, 0.8),
-                })
-                t += 1
-        st.session_state.demo_states = states
+    # WebRTC streamer -- captures browser webcam
+    ctx = webrtc_streamer(
+        key="patient-monitor",
+        mode=WebRtcMode.SENDRECV,
+        video_processor_factory=PatientMonitorProcessor,
+        media_stream_constraints={"video": True, "audio": False},
+        async_processing=True,
+        rtc_configuration={"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]},
+    )
 
-    if st.session_state.demo_states:
-        states = st.session_state.demo_states
+    # Display live metrics below the video when the stream is active
+    if ctx.state.playing and ctx.video_processor:
+        st.subheader("Live Metrics")
 
-        # Current state (latest)
-        current = states[-1]
+        # Read the latest state from the processor
+        with ctx.video_processor._lock:
+            state = dict(ctx.video_processor.result_state)
 
-        # Top metrics row
         col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
-            comfort_pct = int(current["comfort_level"] * 100)
-            st.metric("Comfort Level", f"{comfort_pct}%",
-                       delta=f"{(current['comfort_level'] - states[-2]['comfort_level'])*100:+.0f}%" if len(states) > 1 else None)
+            comfort_pct = int(state["comfort_level"] * 100)
+            st.metric("Comfort Level", f"{comfort_pct}%")
         with col2:
-            pain_val = current["pain_level"]
-            pain_label = "None" if pain_val < 1.5 else ("Mild" if pain_val < 4 else ("Moderate" if pain_val < 8 else "Severe"))
-            st.metric("Pain (PSPI)", f"{pain_val:.1f}", delta=pain_label, delta_color="inverse")
+            pain_val = state["pain_pspi"]
+            st.metric("Pain (PSPI)", f"{pain_val:.1f}", delta=state["pain_label"], delta_color="inverse")
         with col3:
-            st.metric("Heart Rate", f"{current['heart_rate']:.0f} bpm")
-        with col4:
-            arousal_pct = int(current["arousal_level"] * 100)
+            arousal_pct = int(state["arousal_level"] * 100)
             st.metric("Arousal", f"{arousal_pct}%")
-        with col5:
-            engage_pct = int(current["engagement_level"] * 100)
+        with col4:
+            engage_pct = int(state["engagement_level"] * 100)
             st.metric("Engagement", f"{engage_pct}%")
+        with col5:
+            face_status = "Detected" if state["face_detected"] else "Not detected"
+            st.metric("Face", face_status)
 
-        # Alert check
-        if current["pain_level"] > 4:
+        # Alert display
+        if state["alert_level"] != "normal":
+            alert_class = f"alert-{state['alert_level']}"
+            reasons = "; ".join(state["alert_reasons"]) if state["alert_reasons"] else "Monitoring"
             st.markdown(
-                f'<div class="alert-concern">CONCERN: Pain indicators elevated '
-                f'(PSPI={current["pain_level"]:.1f}). Consider checking on patient.</div>',
+                f'<div class="{alert_class}">{state["alert_level"].upper()}: {reasons}</div>',
                 unsafe_allow_html=True,
             )
 
-        # Charts
-        st.subheader("Trends Over Time")
-        col_left, col_right = st.columns(2)
+        # Action Units detail
+        if state["aus"]:
+            with st.expander("Action Unit Details (FACS)", expanded=False):
+                au_data = state["aus"]
+                au_cols = st.columns(4)
+                au_items = list(au_data.items())
+                for i, (au_name, au_val) in enumerate(au_items):
+                    with au_cols[i % 4]:
+                        bar_val = float(au_val)
+                        st.text(f"{au_name}: {bar_val:.2f}")
+                        st.progress(min(bar_val, 1.0))
 
-        with col_left:
-            # Pain & Comfort over time
+        # Observations
+        if state["observations"]:
+            with st.expander("Observations", expanded=True):
+                for obs in state["observations"]:
+                    st.info(obs)
+
+        st.caption("Metrics update with each video frame. Click START above to begin webcam capture.")
+    else:
+        st.info(
+            "Click **START** above to begin webcam capture and real-time facial analysis.\n\n"
+            "Your browser will ask for camera permission. "
+            "The system will analyze facial Action Units, estimate pain (PSPI scale), "
+            "and monitor comfort/arousal levels in real time."
+        )
+
+    # Keep the demo data section as a fallback
+    st.divider()
+    with st.expander("Demo Mode (no camera needed)", expanded=False):
+        if st.button("Generate Demo Data", type="secondary"):
+            states = []
+            scenarios = [
+                ("Resting", 20, (0, 1), (0.7, 0.9), (0.2, 0.3), (65, 75)),
+                ("Mild discomfort", 15, (1, 3), (0.4, 0.6), (0.4, 0.5), (70, 85)),
+                ("Pain episode", 10, (4, 8), (0.1, 0.3), (0.6, 0.8), (80, 105)),
+                ("Recovery", 15, (1, 3), (0.4, 0.6), (0.3, 0.5), (70, 85)),
+                ("Comfortable", 20, (0, 1), (0.6, 0.85), (0.2, 0.35), (62, 78)),
+            ]
+            t = 0
+            for name, dur, pain_r, comfort_r, arousal_r, hr_r in scenarios:
+                for _ in range(dur):
+                    states.append({
+                        "timestamp": t,
+                        "scenario": name,
+                        "pain_level": np.random.uniform(*pain_r),
+                        "comfort_level": np.random.uniform(*comfort_r),
+                        "arousal_level": np.random.uniform(*arousal_r),
+                        "heart_rate": np.random.uniform(*hr_r),
+                        "engagement_level": np.random.uniform(0.5, 0.8),
+                    })
+                    t += 1
+            st.session_state.demo_states = states
+
+        if st.session_state.demo_states:
+            states = st.session_state.demo_states
+            current = states[-1]
+
+            col1, col2, col3, col4, col5 = st.columns(5)
+            with col1:
+                comfort_pct = int(current["comfort_level"] * 100)
+                st.metric("Comfort Level", f"{comfort_pct}%")
+            with col2:
+                pain_val = current["pain_level"]
+                pain_label = "None" if pain_val < 1.5 else ("Mild" if pain_val < 4 else ("Moderate" if pain_val < 8 else "Severe"))
+                st.metric("Pain (PSPI)", f"{pain_val:.1f}", delta=pain_label, delta_color="inverse")
+            with col3:
+                st.metric("Heart Rate", f"{current['heart_rate']:.0f} bpm")
+            with col4:
+                arousal_pct = int(current["arousal_level"] * 100)
+                st.metric("Arousal", f"{arousal_pct}%")
+            with col5:
+                engage_pct = int(current["engagement_level"] * 100)
+                st.metric("Engagement", f"{engage_pct}%")
+
             import pandas as pd
             df = pd.DataFrame(states)
-            chart_data = df[["timestamp", "pain_level", "comfort_level"]].rename(
-                columns={"pain_level": "Pain (PSPI/10)", "comfort_level": "Comfort"}
-            )
-            chart_data["Pain (PSPI/10)"] = chart_data["Pain (PSPI/10)"] / 10.0
-            st.line_chart(chart_data.set_index("timestamp"), use_container_width=True)
-            st.caption("Pain (PSPI scale, /10) and Comfort (0-1) over time")
-
-        with col_right:
-            # Heart rate
-            hr_data = df[["timestamp", "heart_rate"]].rename(
-                columns={"heart_rate": "Heart Rate (bpm)"}
-            )
-            st.line_chart(hr_data.set_index("timestamp"), use_container_width=True)
-            st.caption("Estimated heart rate (rPPG) - for monitoring trends only")
-
-        # Observations panel
-        st.subheader("Recent Observations")
-        current_scenario = current["scenario"]
-        obs_text = {
-            "Resting": [
-                "Face detected, eyes open",
-                "Patient appears restful",
-                "Vital signs within normal range",
-            ],
-            "Mild discomfort": [
-                "Brow lowering detected (AU4)",
-                "Slight increase in arousal indicators",
-                "Heart rate slightly elevated",
-            ],
-            "Pain episode": [
-                "Brow lowering detected (AU4)",
-                "Nose wrinkle detected (AU9)",
-                "Eyes squinting (AU43)",
-                "Pain PSPI score elevated",
-                "Heart rate above resting baseline",
-            ],
-            "Recovery": [
-                "Pain indicators decreasing",
-                "Comfort level improving",
-                "Heart rate returning to baseline",
-            ],
-            "Comfortable": [
-                "Lip corner pull detected (AU12 - possible smile)",
-                "Patient appears comfortable",
-                "Vital signs within normal range",
-            ],
-        }
-        for obs in obs_text.get(current_scenario, ["Monitoring..."]):
-            st.info(obs)
-
-    else:
-        st.info("Click 'Generate Demo Data' to see the dashboard in action, "
-                "or run `python monitor.py` for real-time camera monitoring.")
+            col_left, col_right = st.columns(2)
+            with col_left:
+                chart_data = df[["timestamp", "pain_level", "comfort_level"]].rename(
+                    columns={"pain_level": "Pain (PSPI/10)", "comfort_level": "Comfort"}
+                )
+                chart_data["Pain (PSPI/10)"] = chart_data["Pain (PSPI/10)"] / 10.0
+                st.line_chart(chart_data.set_index("timestamp"), use_container_width=True)
+                st.caption("Pain (PSPI scale, /10) and Comfort (0-1) over time")
+            with col_right:
+                hr_data = df[["timestamp", "heart_rate"]].rename(
+                    columns={"heart_rate": "Heart Rate (bpm)"}
+                )
+                st.line_chart(hr_data.set_index("timestamp"), use_container_width=True)
+                st.caption("Estimated heart rate (rPPG) - for monitoring trends only")
 
 
 # ─── Session Review Mode ─────────────────────────────────────

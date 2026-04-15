@@ -5,8 +5,6 @@ venv/
 .venv/
 .git/
 .gitignore
-models/
-*.task
 data/session_logs/*.jsonl
 .DS_Store
 Thumbs.db

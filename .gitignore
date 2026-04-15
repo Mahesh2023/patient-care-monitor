@@ -21,9 +21,6 @@ Thumbs.db
 # Session logs (generated at runtime)
 data/session_logs/*.jsonl
 
-# Models (downloaded separately)
-models/*.task
-
 # Distribution
 dist/
 build/
