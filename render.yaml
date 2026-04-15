@@ -3,7 +3,7 @@ services:
     name: patient-care-monitor
     runtime: docker
     plan: free
-    healthCheckPath: /_stcore/health
+    healthCheckPath: /
     envVars:
       - key: PORT
         value: "10000"

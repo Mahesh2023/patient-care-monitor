@@ -25,16 +25,12 @@ COPY . .
 # Create data directories
 RUN mkdir -p data/session_logs
 
-# Render.com sets PORT env var; default to 8501 for local use
-ENV PORT=8501
+# Render.com sets PORT env var; default to 7860 for Gradio
+ENV PORT=7860
 EXPOSE ${PORT}
 
 # Health check
-HEALTHCHECK CMD curl --fail http://localhost:${PORT}/_stcore/health || exit 1
+HEALTHCHECK CMD curl --fail http://localhost:${PORT}/ || exit 1
 
-# Run Streamlit — uses $PORT so Render can assign its own port
-CMD streamlit run dashboard.py \
-    --server.headless=true \
-    --server.port=${PORT} \
-    --server.address=0.0.0.0 \
-    --browser.gatherUsageStats=false
+# Run Gradio app
+CMD python app.py
