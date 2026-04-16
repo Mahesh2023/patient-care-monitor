@@ -184,19 +184,6 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-async def analyze_data(
-    age: int,
-    gender: str,
-    weight: float,
-    height: float,
-    activity_level: str,
-    goal: str,
-    dietary_restrictions: str,
-    region: str
-):
-    """Analyze user data and generate recommendations"""
-    try:
-        # Create profile
         profile = UserProfile(
             age=age,
             gender=gender,
