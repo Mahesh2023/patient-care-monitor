@@ -42,6 +42,28 @@ from modules.report_parser import ReportParser
 from modules.agent_monitor import agent_monitor, AgentStatus
 from utils.session_logger import SessionLogger
 
+# Handle missing dependencies gracefully
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    PSUTIL_AVAILABLE = False
+    logger.warning("psutil not available - Agent Dashboard features disabled")
+
+try:
+    import pdfplumber
+    PDFPLUMBER_AVAILABLE = True
+except ImportError:
+    PDFPLUMBER_AVAILABLE = False
+    logger.warning("pdfplumber not available - PDF parsing disabled")
+
+try:
+    import pytesseract
+    PYTESSERACT_AVAILABLE = True
+except ImportError:
+    PYTESSERACT_AVAILABLE = False
+    logger.warning("pytesseract not available - OCR disabled")
+
 
 # ─── Page Config ─────────────────────────────────────────────
 st.set_page_config(
@@ -248,7 +270,17 @@ with st.sidebar:
     st.divider()
 
     # Mode selector
-    mode = st.radio("Mode", ["Dashboard", "Trauma Support", "Nutrition Planner", "Health Checkup", "Agent Dashboard", "Session Review", "Text Analysis", "Research", "About"])
+    available_modes = ["Dashboard", "Trauma Support", "Nutrition Planner", "Session Review", "Text Analysis", "Research", "About"]
+    
+    # Add Health Checkup if analyzer is available
+    if st.session_state.get("health_checkup_analyzer") is not None:
+        available_modes.insert(3, "Health Checkup")
+    
+    # Add Agent Dashboard if psutil is available
+    if PSUTIL_AVAILABLE:
+        available_modes.insert(4, "Agent Dashboard")
+    
+    mode = st.radio("Mode", available_modes)
 
     st.divider()
 
@@ -673,16 +705,20 @@ elif mode == "Nutrition Planner":
 elif mode == "Health Checkup":
     st.header("🩺 Health Checkup Analysis")
     
-    st.markdown(
-        '<div class="disclaimer-box">'
-        'Upload blood test, urine test, or abdomen scan reports for automated analysis. '
-        'This tool provides health scoring, condition detection, and dietary recommendations. '
-        'Consult a healthcare professional for medical advice.'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    
-    health_analyzer = st.session_state.health_checkup_analyzer
+    if st.session_state.get("health_checkup_analyzer") is None:
+        st.error("Health Checkup analyzer is not available. Please check dependencies.")
+        st.info("Required dependencies are installed. Try refreshing the page.")
+    else:
+        st.markdown(
+            '<div class="disclaimer-box">'
+            'Upload blood test, urine test, or abdomen scan reports for automated analysis. '
+            'This tool provides health scoring, condition detection, and dietary recommendations. '
+            'Consult a healthcare professional for medical advice.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        
+        health_analyzer = st.session_state.health_checkup_analyzer
     
     # Input method selection
     input_method = st.radio("Input Method", ["Manual Entry", "Upload Report (Text)"])
@@ -804,17 +840,21 @@ elif mode == "Health Checkup":
 elif mode == "Agent Dashboard":
     st.header("🤖 Agent Dashboard")
     
-    st.markdown(
-        '<div class="disclaimer-box">'
-        'Real-time monitoring of analysis agents and system metrics. '
-        'Track agent status, performance, and system resources.'
-        '</div>',
-        unsafe_allow_html=True,
-    )
-    
-    # System metrics
-    st.subheader("💻 System Metrics")
-    system_metrics = agent_monitor.get_system_metrics()
+    if not PSUTIL_AVAILABLE:
+        st.error("Agent Dashboard requires psutil dependency. Please install it.")
+        st.info("Run: pip install psutil>=5.9.0")
+    else:
+        st.markdown(
+            '<div class="disclaimer-box">'
+            'Real-time monitoring of analysis agents and system metrics. '
+            'Track agent status, performance, and system resources.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        
+        # System metrics
+        st.subheader("💻 System Metrics")
+        system_metrics = agent_monitor.get_system_metrics()
     
     if "error" not in system_metrics:
         col1, col2, col3, col4 = st.columns(4)
