@@ -1,40 +1,26 @@
-FROM python:3.11-slim
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy static files
+COPY index.html /usr/share/nginx/html/
+COPY styles.css /usr/share/nginx/html/
+COPY app.js /usr/share/nginx/html/
 
-# Install system dependencies (opencv, mediapipe, av/webrtc need these)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    libgomp1 \
-    libegl1 \
-    libgles2 \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Copy Python backend (optional, for API endpoints)
+COPY requirements.txt /app/
+COPY modules/ /app/modules/
+COPY utils/ /app/utils/
+COPY config.py /app/
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python for backend API
+RUN apk add --no-cache python3 py3-pip
+RUN pip3 install --no-cache-dir -r /app/requirements.txt
 
-# Copy application code (includes models/face_landmarker.task)
-# cache-bust: v2
-COPY . .
-
-# Create data directories
-RUN mkdir -p data/session_logs
-
-# Version marker - force rebuild
-# Dashboard v2.0 - Redesigned from scratch
-
-# Render.com sets PORT env var
-ENV PORT=8501
-EXPOSE ${PORT}
+# Expose port
+ENV PORT=80
+EXPOSE 80
 
 # Health check
-HEALTHCHECK CMD curl --fail http://localhost:${PORT}/ || exit 1
+HEALTHCHECK CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
 
-# Run Streamlit dashboard
-CMD streamlit run dashboard.py --server.port=${PORT} --server.address=0.0.0.0
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"]
