@@ -1,0 +1,2057 @@
+{
+  "meta": {
+    "description": "Ayurvedic remedies knowledge base sourced from Charaka Samhita and Sushruta Samhita",
+    "version": "1.0.0",
+    "disclaimer": "For informational/educational purposes only. Not a substitute for medical advice."
+  },
+  "conditions": {
+    "fatty_liver_grade1": {
+      "dosha": "Kapha-Pitta",
+      "description": "Mild hepatic steatosis — early Yakrit Roga with Kapha-Pitta vitiation",
+      "remedies": [
+        {
+          "name": "Arogyavardhini Vati",
+          "ingredients": [
+            "Shuddha Parada",
+            "Shuddha Gandhaka",
+            "Loha Bhasma",
+            "Abhraka Bhasma",
+            "Tamra Bhasma",
+            "Triphala",
+            "Shuddha Shilajit",
+            "Shuddha Guggulu",
+            "Chitraka",
+            "Katuki"
+          ],
+          "preparation": "Classical Rasa Shastra preparation: purified metals and herbs ground into tablet form per Rasa Ratna Samucchaya guidelines",
+          "dosage": "1-2 tablets (250 mg each) twice daily with lukewarm water, before meals",
+          "source": "Rasa Ratna Samucchaya, Ch. 20; widely referenced in Charaka Samhita Chikitsa Sthana",
+          "mechanism": "Katuki (Picrorhiza kurroa) provides hepatoprotective kutkin; Triphala supports bile flow; Guggulu reduces lipid accumulation in hepatocytes"
+        },
+        {
+          "name": "Kumaryasava",
+          "ingredients": [
+            "Kumari (Aloe vera)",
+            "Guda (Jaggery)",
+            "Dhataki Pushpa",
+            "Loha Churna",
+            "Musta",
+            "Haritaki"
+          ],
+          "preparation": "Asava preparation: herbs fermented with jaggery in earthen pot for 30 days",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 13 (Panduroga Chikitsa)",
+          "mechanism": "Aloe vera (Kumari) supports hepatocyte regeneration; self-generated alcohol acts as bio-enhancer for herb absorption; iron content supports hemoglobin"
+        },
+        {
+          "name": "Katuki Churna",
+          "ingredients": [
+            "Katuki (Picrorhiza kurroa)"
+          ],
+          "preparation": "Root dried in shade and powdered finely; sieved through cloth",
+          "dosage": "1-3 g with honey or warm water, twice daily before meals",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 25 (Dravyaguna)",
+          "mechanism": "Kutkin and picroside compounds provide hepatoprotective, cholagogue, and anti-inflammatory effects; reduces Pitta vitiation in Yakrit"
+        }
+      ],
+      "lifestyle": [
+        "Wake before sunrise (Brahma Muhurta) for optimal liver metabolism",
+        "Avoid daytime sleep (Divaswapna) — aggravates Kapha in liver",
+        "Light dinner before sunset; allow 3-hour gap before sleep",
+        "Brisk walking for 30-45 minutes daily"
+      ],
+      "yoga_asanas": [
+        "Ardha Matsyendrasana (Half Spinal Twist) — massages liver and spleen",
+        "Dhanurasana (Bow Pose) — stimulates abdominal organs",
+        "Bhujangasana (Cobra Pose) — stretches abdominal muscles, aids liver",
+        "Gomukhasana (Cow Face Pose) — stimulates kidneys and liver"
+      ],
+      "pranayama": [
+        "Kapalabhati (Skull Shining Breath) — 3 rounds of 30 strokes",
+        "Bhastrika Pranayama (Bellows Breath) — 2 rounds of 20 strokes"
+      ],
+      "dietary_principles": [
+        "Favour Tikta (bitter) and Kashaya (astringent) Rasa to pacify Kapha-Pitta",
+        "Include bitter gourd (Karavellaka), turmeric (Haridra), and neem leaves",
+        "Avoid Snigdha (oily), Guru (heavy) foods — no fried items",
+        "Use old barley (Yava) and green gram (Mudga) as staple grains/pulses",
+        "Drink warm water infused with cumin (Jeeraka) throughout the day"
+      ],
+      "contraindications": [
+        "Avoid Arogyavardhini Vati during pregnancy and lactation",
+        "Do not use metal-based Bhasmas without practitioner supervision",
+        "Discontinue if gastric irritation occurs"
+      ]
+    },
+    "fatty_liver_grade2": {
+      "dosha": "Kapha-Pitta (Madhyama)",
+      "description": "Moderate hepatic steatosis — progressive Yakrit Roga with significant Kapha-Pitta imbalance",
+      "remedies": [
+        {
+          "name": "Arogyavardhini Vati",
+          "ingredients": [
+            "Shuddha Parada",
+            "Shuddha Gandhaka",
+            "Loha Bhasma",
+            "Abhraka Bhasma",
+            "Tamra Bhasma",
+            "Triphala",
+            "Shuddha Shilajit",
+            "Shuddha Guggulu",
+            "Chitraka",
+            "Katuki"
+          ],
+          "preparation": "Classical Rasa Shastra preparation per Rasa Ratna Samucchaya",
+          "dosage": "2 tablets (250 mg each) twice daily with lukewarm water, before meals",
+          "source": "Rasa Ratna Samucchaya, Ch. 20",
+          "mechanism": "Hepatoprotective Katuki with Guggulu for lipid reduction; Triphala for bile flow support"
+        },
+        {
+          "name": "Punarnava Mandura",
+          "ingredients": [
+            "Punarnava (Boerhavia diffusa)",
+            "Mandura Bhasma (Iron calx)",
+            "Triphala",
+            "Trikatu",
+            "Vidanga",
+            "Chitraka",
+            "Danti"
+          ],
+          "preparation": "Mandura Bhasma processed with Punarnava Kwatha (decoction); made into tablets",
+          "dosage": "2 tablets (250 mg each) twice daily with buttermilk",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 16 (Panduroga)",
+          "mechanism": "Punarnava is a potent hepato-renal protective; Mandura Bhasma provides bioavailable iron; Trikatu enhances bioavailability"
+        },
+        {
+          "name": "Rohitakarishta",
+          "ingredients": [
+            "Rohitaka (Tecomella undulata)",
+            "Dhataki",
+            "Guda",
+            "Chitraka",
+            "Katuki",
+            "Trikatu"
+          ],
+          "preparation": "Arishta fermented preparation — herbs boiled in water and fermented with jaggery for 30 days",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 13",
+          "mechanism": "Rohitaka bark is specific to Yakrit-Pliha Roga (hepato-splenic disease); reduces hepatic congestion and Kapha accumulation"
+        },
+        {
+          "name": "Katuki Churna",
+          "ingredients": [
+            "Katuki (Picrorhiza kurroa)"
+          ],
+          "preparation": "Root dried in shade and powdered finely",
+          "dosage": "3-5 g with honey, twice daily before meals",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 25",
+          "mechanism": "Kutkin provides direct hepatoprotection; picroside-I and II reduce inflammation and oxidative stress in liver"
+        }
+      ],
+      "lifestyle": [
+        "Strictly avoid daytime sleep and late nights",
+        "Engage in moderate Vyayama (exercise) daily — walking, swimming",
+        "Practice Langhana (therapeutic fasting) once weekly under guidance",
+        "Avoid sedentary lifestyle and prolonged sitting"
+      ],
+      "yoga_asanas": [
+        "Ardha Matsyendrasana (Half Spinal Twist)",
+        "Dhanurasana (Bow Pose)",
+        "Bhujangasana (Cobra Pose)",
+        "Paschimottanasana (Seated Forward Bend) — compresses abdomen",
+        "Naukasana (Boat Pose) — strengthens core and liver region"
+      ],
+      "pranayama": [
+        "Kapalabhati — 3 rounds of 50 strokes",
+        "Bhastrika Pranayama — 3 rounds of 20 strokes",
+        "Anulom Vilom (Alternate Nostril) — 10 minutes for Pitta balance"
+      ],
+      "dietary_principles": [
+        "Strict Tikta-Kashaya (bitter-astringent) dominant diet",
+        "Old rice (Purana Shali), barley (Yava), and green gram (Mudga) as staples",
+        "Absolutely no alcohol, fried foods, refined sugars",
+        "Include Patola (pointed gourd), Karavellaka (bitter gourd), Nimba (neem) daily",
+        "Cook with Haridra (turmeric) and Jeeraka (cumin) in every meal"
+      ],
+      "contraindications": [
+        "Avoid aggressive Panchakarma without clinical supervision",
+        "Rohitakarishta contains self-generated alcohol — use with caution in liver disease",
+        "Monitor liver function tests regularly alongside Ayurvedic treatment"
+      ]
+    },
+    "fatty_liver_grade3": {
+      "dosha": "Kapha-Pitta (Tivra/Severe)",
+      "description": "Severe hepatic steatosis — advanced Yakrit Roga requiring intensive management",
+      "remedies": [
+        {
+          "name": "Arogyavardhini Vati",
+          "ingredients": [
+            "Shuddha Parada",
+            "Shuddha Gandhaka",
+            "Loha Bhasma",
+            "Abhraka Bhasma",
+            "Tamra Bhasma",
+            "Triphala",
+            "Shuddha Shilajit",
+            "Shuddha Guggulu",
+            "Chitraka",
+            "Katuki"
+          ],
+          "preparation": "Classical Rasa Shastra preparation per Rasa Ratna Samucchaya",
+          "dosage": "2 tablets (250 mg each) three times daily under practitioner supervision",
+          "source": "Rasa Ratna Samucchaya, Ch. 20",
+          "mechanism": "Maximum hepatoprotective action through synergy of Katuki, Guggulu, and mineral Bhasmas"
+        },
+        {
+          "name": "Punarnava Mandura",
+          "ingredients": [
+            "Punarnava",
+            "Mandura Bhasma",
+            "Triphala",
+            "Trikatu",
+            "Vidanga",
+            "Chitraka"
+          ],
+          "preparation": "Mandura Bhasma processed with Punarnava decoction; tablet form",
+          "dosage": "2 tablets twice daily with Takra (buttermilk)",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 16",
+          "mechanism": "Punarnava is a potent hepato-renal protective; addresses Shotha (swelling) and Pandutva (pallor)"
+        },
+        {
+          "name": "Bhumyamalaki Churna",
+          "ingredients": [
+            "Bhumyamalaki (Phyllanthus niruri)"
+          ],
+          "preparation": "Whole plant dried, powdered, and sieved",
+          "dosage": "3-5 g with warm water, twice daily",
+          "source": "Sushruta Samhita, Sutra Sthana; Bhavaprakasha Nighantu",
+          "mechanism": "Phyllanthin and hypophyllanthin provide potent hepatoprotection; reduces HBsAg in studies; anti-fibrotic activity"
+        }
+      ],
+      "lifestyle": [
+        "Mandatory lifestyle overhaul — strict Pathya (regimen) adherence",
+        "Avoid all Apathya (unwholesome) foods and habits",
+        "Regular medical monitoring alongside Ayurvedic treatment",
+        "Consider Panchakarma under experienced Vaidya supervision"
+      ],
+      "yoga_asanas": [
+        "Gentle Ardha Matsyendrasana only",
+        "Shavasana (Corpse Pose) for stress reduction",
+        "Supta Baddha Konasana (Reclining Bound Angle) — gentle abdominal opening"
+      ],
+      "pranayama": [
+        "Anulom Vilom (Alternate Nostril Breathing) — 15 minutes twice daily",
+        "Sheetali Pranayama (Cooling Breath) — to pacify aggravated Pitta"
+      ],
+      "dietary_principles": [
+        "Exclusively Laghu (light) and Sukha Pachya (easily digestible) foods",
+        "Mudga Yusha (green gram soup) as primary protein source",
+        "No oil/ghee except minimal coconut oil for cooking",
+        "Avoid all processed, packaged, and fermented foods",
+        "Warm water with lemon and turmeric on waking"
+      ],
+      "contraindications": [
+        "Severe fatty liver requires concurrent allopathic monitoring",
+        "Avoid all Asava/Arishta (fermented preparations) in Grade 3",
+        "Do not attempt Virechana (purgation) without specialist supervision",
+        "Metal-based Bhasmas require close monitoring of liver enzymes"
+      ]
+    },
+    "hepatomegaly": {
+      "dosha": "Pitta-Kapha",
+      "description": "Enlarged liver (Yakrit Vriddhi) — predominantly Pitta aggravation with Kapha obstruction",
+      "remedies": [
+        {
+          "name": "Rohitakarishta",
+          "ingredients": [
+            "Rohitaka",
+            "Dhataki",
+            "Guda",
+            "Chitraka",
+            "Katuki",
+            "Trikatu"
+          ],
+          "preparation": "Arishta fermented preparation per Charaka method",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 13",
+          "mechanism": "Rohitaka is the principal drug for Yakrit-Pliha Roga; reduces hepatic congestion"
+        },
+        {
+          "name": "Punarnava Mandura",
+          "ingredients": [
+            "Punarnava",
+            "Mandura Bhasma",
+            "Triphala",
+            "Trikatu",
+            "Vidanga"
+          ],
+          "preparation": "Classical tablet preparation with iron calx",
+          "dosage": "2 tablets twice daily with buttermilk",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 16",
+          "mechanism": "Punarnava reduces Shotha (swelling/oedema); Mandura Bhasma addresses iron deficiency commonly seen"
+        }
+      ],
+      "lifestyle": [
+        "Avoid heavy meals — eat small, frequent, warm meals",
+        "Avoid alcohol and hepatotoxic substances completely",
+        "Practice stress management — chronic stress aggravates Pitta"
+      ],
+      "yoga_asanas": [
+        "Ardha Matsyendrasana (gentle version)",
+        "Bhujangasana (Cobra Pose)",
+        "Vajrasana (Thunderbolt Pose) after meals — aids digestion"
+      ],
+      "pranayama": [
+        "Sheetali Pranayama — cooling breath to reduce Pitta",
+        "Anulom Vilom — 10 minutes for balance"
+      ],
+      "dietary_principles": [
+        "Favour Tikta Rasa (bitter taste) — Patola, Karavellaka, Guduchi",
+        "Light, warm, freshly cooked meals only",
+        "Avoid spicy, sour, and fermented foods (Pitta-aggravating)"
+      ],
+      "contraindications": [
+        "Investigate underlying cause (hepatitis, congestion) before starting treatment",
+        "Avoid Arishta preparations if liver function is severely compromised"
+      ]
+    },
+    "kidney_stones": {
+      "dosha": "Vata-Kapha",
+      "description": "Renal calculi (Ashmari) — Vata dries Kapha forming stone-like concretions in Mutravaha Srotas",
+      "remedies": [
+        {
+          "name": "Gokshuradi Guggulu",
+          "ingredients": [
+            "Gokshura (Tribulus terrestris)",
+            "Guggulu",
+            "Triphala",
+            "Trikatu",
+            "Musta"
+          ],
+          "preparation": "Guggulu processed with Gokshura decoction; rolled into pills",
+          "dosage": "2 tablets (250 mg each) twice daily with warm water",
+          "source": "Sushruta Samhita, Chikitsa Sthana, Ch. 7 (Ashmari Chikitsa)",
+          "mechanism": "Gokshura is Ashmarighna (stone-destroying); saponins increase urine output and flush micro-calculi; Guggulu is anti-inflammatory"
+        },
+        {
+          "name": "Pashanabheda Churna",
+          "ingredients": [
+            "Pashanabheda (Bergenia ligulata)"
+          ],
+          "preparation": "Rhizome dried and powdered",
+          "dosage": "3-5 g with coconut water or warm water, twice daily",
+          "source": "Sushruta Samhita, Chikitsa Sthana, Ch. 7; Bhavaprakasha Nighantu",
+          "mechanism": "Name literally means 'stone-breaker'; bergenin compound demonstrates litholytic activity and inhibits calcium oxalate crystallization"
+        },
+        {
+          "name": "Varunadi Kwatha",
+          "ingredients": [
+            "Varuna (Crataeva nurvala)",
+            "Gokshura",
+            "Punarnava",
+            "Shunthi"
+          ],
+          "preparation": "Coarse powder of herbs; boil 1 part powder in 16 parts water, reduce to 1/4",
+          "dosage": "40-50 ml decoction, twice daily on empty stomach",
+          "source": "Sushruta Samhita, Chikitsa Sthana, Ch. 7",
+          "mechanism": "Varuna bark contains lupeol which inhibits oxalate synthesis and deposition; Gokshura and Punarnava flush the urinary tract"
+        }
+      ],
+      "lifestyle": [
+        "Drink minimum 3 litres of warm water daily (Ushnodaka Pana)",
+        "Avoid prolonged sitting — walk after meals",
+        "Reduce salt intake and oxalate-rich foods"
+      ],
+      "yoga_asanas": [
+        "Pawanmuktasana (Wind Relieving Pose)",
+        "Uttanpadasana (Raised Leg Pose) — stimulates kidneys",
+        "Bhujangasana (Cobra Pose)"
+      ],
+      "pranayama": [
+        "Anulom Vilom — 10 minutes for Vata pacification",
+        "Ujjayi Pranayama — calming, reduces Vata"
+      ],
+      "dietary_principles": [
+        "Hydration is paramount — barley water (Yavagu) is excellent",
+        "Favour Kulitha (horse gram) soup for litholytic action",
+        "Avoid high-oxalate foods: spinach, tomato, rhubarb",
+        "Reduce dairy and excess calcium if calcium oxalate type",
+        "Include coconut water, cucumber, and watermelon regularly"
+      ],
+      "contraindications": [
+        "Stones >10 mm may require surgical intervention — do not delay",
+        "Obstructive uropathy is a medical emergency — seek immediate care",
+        "Monitor renal function during treatment"
+      ]
+    },
+    "gallstones": {
+      "dosha": "Pitta-Kapha",
+      "description": "Cholelithiasis (Pittashmari) — Pitta aggravation causes bile stasis; Kapha solidifies it",
+      "remedies": [
+        {
+          "name": "Arogyavardhini Vati",
+          "ingredients": [
+            "Shuddha Parada",
+            "Shuddha Gandhaka",
+            "Loha Bhasma",
+            "Abhraka Bhasma",
+            "Tamra Bhasma",
+            "Triphala",
+            "Shuddha Shilajit",
+            "Shuddha Guggulu",
+            "Chitraka",
+            "Katuki"
+          ],
+          "preparation": "Classical Rasa Shastra preparation per Rasa Ratna Samucchaya",
+          "dosage": "2 tablets (250 mg each) twice daily with warm water after meals",
+          "source": "Rasa Ratna Samucchaya, Ch. 20",
+          "mechanism": "Katuki stimulates bile flow (cholagogue); prevents bile stasis; Triphala promotes GI motility"
+        },
+        {
+          "name": "Tamra Bhasma",
+          "ingredients": [
+            "Shuddha Tamra (purified copper)"
+          ],
+          "preparation": "Copper purified through repeated Shodhana; incinerated with herbal juices per Rasa Shastra",
+          "dosage": "15-30 mg with honey, once daily under strict supervision",
+          "source": "Rasa Ratna Samucchaya; Sushruta Samhita",
+          "mechanism": "Tamra Bhasma is considered specific for Pittashmari; micro-dose copper supports biliary function and prevents cholesterol crystallization"
+        }
+      ],
+      "lifestyle": [
+        "Avoid large, fatty meals — eat small, frequent meals",
+        "Do not skip meals — prolonged fasting aggravates bile stasis",
+        "Moderate exercise daily — 30-minute brisk walk"
+      ],
+      "yoga_asanas": [
+        "Ardha Matsyendrasana — stimulates gallbladder",
+        "Shalabhasana (Locust Pose) — strengthens abdomen",
+        "Dhanurasana (Bow Pose)"
+      ],
+      "pranayama": [
+        "Sheetali Pranayama — cooling, reduces Pitta",
+        "Kapalabhati — gentle rounds to stimulate digestion"
+      ],
+      "dietary_principles": [
+        "Strictly low-fat diet — avoid ghee, butter, fried foods",
+        "Include apple, pear, and beetroot for natural cholagogue effect",
+        "Warm lemon water on waking to stimulate bile flow",
+        "Favour Tikta Rasa (bitter) herbs and vegetables"
+      ],
+      "contraindications": [
+        "Symptomatic gallstones with recurrent colic may require cholecystectomy",
+        "Tamra Bhasma must be properly prepared — impure copper is toxic",
+        "Do not attempt gallbladder flush without medical supervision"
+      ]
+    },
+    "splenomegaly": {
+      "dosha": "Pitta-Kapha",
+      "description": "Enlarged spleen (Pliha Vriddhi) — Pitta imbalance with Rakta Dhatu involvement",
+      "remedies": [
+        {
+          "name": "Rohitakarishta",
+          "ingredients": [
+            "Rohitaka",
+            "Dhataki",
+            "Guda",
+            "Chitraka",
+            "Katuki"
+          ],
+          "preparation": "Arishta fermentation as per classical method",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 13",
+          "mechanism": "Rohitaka is Yakrit-Pliha Hara (hepato-splenic specific); reduces splenic congestion"
+        },
+        {
+          "name": "Pippalyasava",
+          "ingredients": [
+            "Pippali (Long pepper)",
+            "Dhataki",
+            "Guda",
+            "Maricha",
+            "Chavya"
+          ],
+          "preparation": "Asava fermentation with Pippali as primary herb",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 13",
+          "mechanism": "Pippali kindles Agni (digestive fire) and reduces splenic Kapha; piperine enhances absorption of co-administered herbs"
+        }
+      ],
+      "lifestyle": [
+        "Avoid contact sports — enlarged spleen is vulnerable to rupture",
+        "Anti-inflammatory diet and lifestyle",
+        "Adequate rest with moderate non-impact exercise"
+      ],
+      "yoga_asanas": [
+        "Gentle Ardha Matsyendrasana",
+        "Supta Virasana (Reclining Hero Pose)",
+        "Shavasana with guided relaxation"
+      ],
+      "pranayama": [
+        "Anulom Vilom — balancing, gentle",
+        "Bhramari (Bee Breathing) — calming effect"
+      ],
+      "dietary_principles": [
+        "Light, easily digestible meals — Mudga Yusha (green gram soup), old rice",
+        "Include pomegranate (Dadima) — specific for Raktapitta and Pliha conditions",
+        "Avoid heavy, cold, and Kapha-aggravating foods",
+        "Turmeric milk (Haridra Ksheera) daily"
+      ],
+      "contraindications": [
+        "Investigate underlying cause (infection, haematological) before treatment",
+        "Avoid vigorous abdominal exercises and yoga",
+        "Splenomegaly with cytopenias requires haematologist evaluation"
+      ]
+    },
+    "diabetes": {
+      "dosha": "Kapha-Pitta-Vata",
+      "description": "Prameha/Madhumeha — initial Kapha provocation progresses through Pitta to Vata stage",
+      "remedies": [
+        {
+          "name": "Chandraprabha Vati",
+          "ingredients": [
+            "Chandraprabha (Swarna Makshika Bhasma)",
+            "Shilajit",
+            "Guggulu",
+            "Triphala",
+            "Trikatu",
+            "Vacha",
+            "Musta",
+            "Danti",
+            "Vidanga"
+          ],
+          "preparation": "Classical multi-herb tablet prepared per Sharangdhara Samhita",
+          "dosage": "2 tablets (250 mg each) twice daily with warm water",
+          "source": "Sharangdhara Samhita, Madhyama Khanda, Ch. 7",
+          "mechanism": "Acts on Mutravaha Srotas; Shilajit contains fulvic acid with hypoglycaemic activity; Guggulu improves insulin sensitivity"
+        },
+        {
+          "name": "Nishamalaki Churna",
+          "ingredients": [
+            "Nisha (Haridra/Turmeric)",
+            "Amalaki (Indian gooseberry)"
+          ],
+          "preparation": "Equal parts of Haridra and Amalaki churna mixed",
+          "dosage": "3-5 g with warm water or honey, twice daily before meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 6 (Prameha Chikitsa)",
+          "mechanism": "Curcumin improves insulin sensitivity and reduces inflammation; Amalaki is rich in vitamin C and chromium, supports glucose metabolism"
+        },
+        {
+          "name": "Shilajit Vati",
+          "ingredients": [
+            "Shuddha Shilajit (purified mineral pitch)"
+          ],
+          "preparation": "Purified Shilajit processed with Triphala decoction and formed into tablets",
+          "dosage": "250-500 mg twice daily with warm milk or water",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 6; Sushruta Samhita, Chikitsa Sthana, Ch. 11",
+          "mechanism": "Fulvic and humic acids improve glucose uptake; traditionally called 'conqueror of mountains and destroyer of weakness'"
+        }
+      ],
+      "lifestyle": [
+        "Regular Vyayama (exercise) — minimum 45 minutes daily",
+        "Avoid daytime sleep; sleep by 10 PM",
+        "Padabhyanga (foot massage with warm sesame oil) daily for neuropathy prevention",
+        "Regular monitoring of blood glucose alongside Ayurvedic treatment"
+      ],
+      "yoga_asanas": [
+        "Surya Namaskar (Sun Salutation) — 12 rounds daily",
+        "Mandukasana (Frog Pose) — directly stimulates pancreas",
+        "Ardha Matsyendrasana — massages pancreas",
+        "Paschimottanasana — stimulates abdominal organs",
+        "Dhanurasana — strengthens pancreatic function"
+      ],
+      "pranayama": [
+        "Kapalabhati — 5 rounds of 30 strokes (stimulates pancreas)",
+        "Bhastrika — 3 rounds of 20 strokes",
+        "Anulom Vilom — 15 minutes for autonomic balance"
+      ],
+      "dietary_principles": [
+        "Yava (barley) is the grain of choice for Prameha — use as staple",
+        "Mudga (green gram) is the best pulse for diabetics per Charaka",
+        "Include Methi (fenugreek) seeds soaked overnight — 1 tsp daily",
+        "Bitter gourd (Karavellaka) juice — 30 ml on empty stomach",
+        "Avoid all Madhura Rasa (sweet) foods, especially refined sugars",
+        "Jambu (Jamun/Indian blackberry) seeds powder — 3 g with water"
+      ],
+      "contraindications": [
+        "Do not replace insulin or OHA with Ayurvedic medicines without medical guidance",
+        "Shilajit is contraindicated in hyperuricemia",
+        "Monitor HbA1c every 3 months to assess treatment efficacy"
+      ]
+    },
+    "prediabetes": {
+      "dosha": "Kapha",
+      "description": "Early Prameha — predominant Kapha vitiation with impaired Agni (digestive fire)",
+      "remedies": [
+        {
+          "name": "Nishamalaki Churna",
+          "ingredients": [
+            "Nisha (Haridra/Turmeric)",
+            "Amalaki (Indian gooseberry)"
+          ],
+          "preparation": "Equal parts of Haridra and Amalaki churna mixed",
+          "dosage": "3 g with warm water, twice daily before meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 6",
+          "mechanism": "Curcumin and amla synergistically improve insulin sensitivity and reduce oxidative stress"
+        },
+        {
+          "name": "Triphala Churna",
+          "ingredients": [
+            "Haritaki (Terminalia chebula)",
+            "Bibhitaki (Terminalia bellirica)",
+            "Amalaki (Emblica officinalis)"
+          ],
+          "preparation": "Equal parts dried fruits powdered and mixed",
+          "dosage": "3-5 g with warm water at bedtime",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 25; Sushruta Samhita, Sutra Sthana, Ch. 38",
+          "mechanism": "Regulates carbohydrate metabolism; gallic acid and chebulagic acid improve insulin signalling; powerful antioxidant"
+        }
+      ],
+      "lifestyle": [
+        "Increase daily physical activity — brisk walking 45 minutes",
+        "Weight reduction if overweight — Kapha-pacifying regimen",
+        "Avoid sedentary lifestyle and excessive sleep",
+        "Early dinner (before 7 PM) with light foods"
+      ],
+      "yoga_asanas": [
+        "Surya Namaskar — 6-12 rounds",
+        "Mandukasana (Frog Pose)",
+        "Vakrasana (Twisted Pose) — stimulates pancreas"
+      ],
+      "pranayama": [
+        "Kapalabhati — 3 rounds of 30 strokes",
+        "Bhastrika — 2 rounds of 20 strokes"
+      ],
+      "dietary_principles": [
+        "Replace white rice with barley (Yava) and millets",
+        "Include fenugreek (Methi) and bitter gourd regularly",
+        "Avoid Guru (heavy), Snigdha (oily), and Madhura (sweet) dominant foods",
+        "Favour Tikta (bitter) and Katu (pungent) tastes"
+      ],
+      "contraindications": [
+        "Prediabetes may reverse with lifestyle alone — avoid over-medication",
+        "Monitor fasting glucose monthly to track progression"
+      ]
+    },
+    "dyslipidemia": {
+      "dosha": "Kapha-Medas",
+      "description": "Medoroga / Dhamanipratichaya — excess Meda Dhatu (fat tissue) with Kapha vitiation obstructing Srotas (channels)",
+      "remedies": [
+        {
+          "name": "Medohar Guggulu",
+          "ingredients": [
+            "Guggulu (Commiphora mukul)",
+            "Triphala",
+            "Trikatu",
+            "Musta",
+            "Vidanga"
+          ],
+          "preparation": "Guggulu processed with herb decoctions; formed into tablets",
+          "dosage": "2 tablets (250 mg each) twice daily with warm water after meals",
+          "source": "Bhaishajya Ratnavali, Sthaulya Rogadhikara; Charaka Samhita reference",
+          "mechanism": "Guggulsterones (Z and E) demonstrated to reduce LDL and increase HDL; Triphala reduces intestinal cholesterol absorption"
+        },
+        {
+          "name": "Arjuna Ksheerapaka",
+          "ingredients": [
+            "Arjuna (Terminalia arjuna) bark"
+          ],
+          "preparation": "1 tsp Arjuna bark powder boiled in 1 cup milk + 1 cup water, reduced to 1 cup",
+          "dosage": "1 cup Arjuna Ksheerapaka daily on empty stomach, morning",
+          "source": "Charaka Samhita, Sutra Sthana; Sushruta Samhita — Arjuna is Hridya (cardioprotective)",
+          "mechanism": "Arjunic acid and arjungenin strengthen cardiac muscle; bark tannins reduce LDL oxidation; improves HDL/LDL ratio"
+        }
+      ],
+      "lifestyle": [
+        "Regular aerobic exercise — 45-60 minutes, 5 days a week",
+        "Dry powder massage (Udvartana) with Triphala or Kolkulaththa churna",
+        "Avoid daytime sleep — strongly Kapha-aggravating",
+        "Eat warm, freshly cooked meals; avoid cold and heavy foods"
+      ],
+      "yoga_asanas": [
+        "Surya Namaskar — 12+ rounds for cardiovascular benefit",
+        "Sarvangasana (Shoulder Stand) — stimulates thyroid, improves metabolism",
+        "Halasana (Plough Pose) — reduces abdominal fat",
+        "Matsyasana (Fish Pose) — counter-pose for Sarvangasana"
+      ],
+      "pranayama": [
+        "Kapalabhati — 5 rounds of 50 strokes (metabolic activation)",
+        "Bhastrika — 3 rounds of 30 strokes",
+        "Surya Bhedana (Right Nostril Breathing) — activating"
+      ],
+      "dietary_principles": [
+        "Favour Katu (pungent), Tikta (bitter), Kashaya (astringent) tastes",
+        "Use honey (Madhu) as sweetener — scrapes Kapha per Charaka",
+        "Include garlic (Lashuna), ginger (Shunthi), and turmeric daily",
+        "Replace ghee with mustard oil or minimal sesame oil",
+        "Old barley (Yava) and millets as carbohydrate sources"
+      ],
+      "contraindications": [
+        "Honey should never be heated — becomes toxic per Ayurveda",
+        "Severe dyslipidemia with CAD history requires statin therapy — do not replace",
+        "Guggulu may interact with thyroid medications and anticoagulants"
+      ]
+    },
+    "hypothyroidism": {
+      "dosha": "Kapha-Vata",
+      "description": "Kapha dominance in Agni leading to Dhatvagnimandya (reduced tissue metabolism)",
+      "remedies": [
+        {
+          "name": "Kanchanara Guggulu",
+          "ingredients": [
+            "Kanchanara (Bauhinia variegata) bark",
+            "Guggulu",
+            "Triphala",
+            "Trikatu",
+            "Varuna",
+            "Ela"
+          ],
+          "preparation": "Kanchanara bark decoction used to process Guggulu; tablet form",
+          "dosage": "2 tablets (250 mg each) twice daily with warm water",
+          "source": "Sharangdhara Samhita, Madhyama Khanda",
+          "mechanism": "Kanchanara is specific for Galaganda (goitre/thyroid conditions); stimulates thyroid function; Guggulu has known thyroid-stimulating activity via T4 to T3 conversion"
+        },
+        {
+          "name": "Ashwagandha Churna",
+          "ingredients": [
+            "Ashwagandha (Withania somnifera) root"
+          ],
+          "preparation": "Root dried, powdered, and sieved",
+          "dosage": "3-5 g with warm milk at bedtime",
+          "source": "Charaka Samhita, Chikitsa Sthana (Rasayana Adhyaya)",
+          "mechanism": "Withanolides stimulate thyroid hormone secretion; adaptogenic — reduces cortisol which suppresses TSH; improves T4 levels in subclinical hypothyroidism"
+        }
+      ],
+      "lifestyle": [
+        "Regular morning exercise — essential for Kapha balance",
+        "Avoid cold foods and cold environments",
+        "Ensure adequate iodine from natural sources (sea salt, seaweed)"
+      ],
+      "yoga_asanas": [
+        "Sarvangasana (Shoulder Stand) — directly stimulates thyroid",
+        "Matsyasana (Fish Pose) — stretches thyroid region",
+        "Halasana (Plough Pose) — complementary thyroid stimulation",
+        "Simhasana (Lion Pose) — stimulates throat and thyroid"
+      ],
+      "pranayama": [
+        "Ujjayi Pranayama (Ocean Breath) — vibration stimulates thyroid",
+        "Kapalabhati — metabolic activation"
+      ],
+      "dietary_principles": [
+        "Avoid raw goitrogenic vegetables (cabbage, cauliflower, broccoli) — cook them well",
+        "Ensure iodised salt usage; include sea fish if non-vegetarian",
+        "Favour warm, light, Katu (pungent) foods",
+        "Include coconut oil — medium-chain triglycerides support thyroid"
+      ],
+      "contraindications": [
+        "Do not discontinue Levothyroxine for Ayurvedic treatment",
+        "Guggulu affects thyroid — monitor TSH closely if on medication",
+        "Sarvangasana contraindicated in cervical spondylosis and hypertension"
+      ]
+    },
+    "hyperuricemia": {
+      "dosha": "Vata-Pitta",
+      "description": "Vatarakta — Vata carrying aggravated Rakta Dhatu (blood); uric acid is Ama in Rakta",
+      "remedies": [
+        {
+          "name": "Kaishor Guggulu",
+          "ingredients": [
+            "Guggulu",
+            "Guduchi",
+            "Triphala",
+            "Trikatu",
+            "Vidanga",
+            "Danti"
+          ],
+          "preparation": "Guggulu processed with decoction of above herbs; formed into tablets",
+          "dosage": "2 tablets (250 mg each) twice daily with warm water",
+          "source": "Sharangdhara Samhita; indicated in Vatarakta per Charaka Samhita, Chikitsa Sthana, Ch. 29",
+          "mechanism": "Guduchi is anti-inflammatory and immunomodulatory; Guggulu reduces swelling; Triphala detoxifies Rakta Dhatu through gentle purgation"
+        },
+        {
+          "name": "Punarnava Churna",
+          "ingredients": [
+            "Punarnava (Boerhavia diffusa)"
+          ],
+          "preparation": "Whole plant dried and powdered",
+          "dosage": "3-5 g with warm water, twice daily",
+          "source": "Charaka Samhita, Sutra Sthana; Bhavaprakasha Nighantu",
+          "mechanism": "Potent diuretic and anti-inflammatory; increases uric acid excretion through kidneys; reduces Shotha (swelling)"
+        }
+      ],
+      "lifestyle": [
+        "Hydration — minimum 3 litres water daily to flush uric acid",
+        "Avoid alcohol completely — especially beer",
+        "Maintain healthy body weight",
+        "Avoid fasting — it increases uric acid through ketosis"
+      ],
+      "yoga_asanas": [
+        "Gentle joint mobility exercises",
+        "Pawanmuktasana series — joint freeing sequence",
+        "Tadasana (Mountain Pose) — grounding"
+      ],
+      "pranayama": [
+        "Anulom Vilom — Vata pacification",
+        "Ujjayi Pranayama — calming"
+      ],
+      "dietary_principles": [
+        "Strictly avoid high-purine foods: organ meats, red meat, shellfish",
+        "Include cherry (shown to reduce uric acid), cucumber, and celery",
+        "Milk and low-fat dairy are protective in hyperuricemia",
+        "Favour vegetarian diet — Mudga (green gram), Yava (barley)",
+        "Avoid Vidahi (irritating) and Abhishyandi (channel-blocking) foods"
+      ],
+      "contraindications": [
+        "Acute gouty arthritis attack — use Colchicine/NSAIDs; Ayurveda as adjunct",
+        "Guggulu may interact with anticoagulants",
+        "Tophi formation requires allopathic urate-lowering therapy"
+      ]
+    },
+    "vitamin_d_deficiency": {
+      "dosha": "Vata",
+      "description": "Asthi-Kshaya tendency — Vata aggravation depleting Asthi Dhatu (bone tissue)",
+      "remedies": [
+        {
+          "name": "Ashwagandha Ksheerapaka",
+          "ingredients": [
+            "Ashwagandha (Withania somnifera)",
+            "Cow milk"
+          ],
+          "preparation": "1 tsp Ashwagandha powder boiled in 1 cup milk + 1 cup water, reduced to 1 cup",
+          "dosage": "1 cup at bedtime daily",
+          "source": "Charaka Samhita, Chikitsa Sthana (Rasayana); Ashtanga Hridaya",
+          "mechanism": "Ashwagandha promotes Asthi Dhatu formation; withanolides enhance calcium absorption; adaptogenic — reduces cortisol that depletes bone"
+        },
+        {
+          "name": "Praval Pishti",
+          "ingredients": [
+            "Praval (Coral) processed with rose water"
+          ],
+          "preparation": "Coral ground with rose water repeatedly until superfine; classical Pishti preparation",
+          "dosage": "250-500 mg with honey or warm milk, once daily",
+          "source": "Rasa Tarangini; traditional Rasa Shastra text",
+          "mechanism": "Natural calcium carbonate in highly bioavailable form; cooling (Sheeta Virya) — pacifies Pitta while nourishing Asthi Dhatu"
+        }
+      ],
+      "lifestyle": [
+        "Morning sunlight exposure (Surya Atapa Sevana) — 20-30 minutes before 10 AM",
+        "Sesame oil Abhyanga (self-massage) — nourishes Asthi Dhatu",
+        "Weight-bearing exercise for bone health"
+      ],
+      "yoga_asanas": [
+        "Surya Namaskar — performed in morning sun",
+        "Vrikshasana (Tree Pose) — balance and bone loading",
+        "Virabhadrasana (Warrior Pose) — weight-bearing"
+      ],
+      "pranayama": [
+        "Surya Bhedana (Right Nostril Breathing) — warming, Vata-pacifying",
+        "Anulom Vilom — 10 minutes"
+      ],
+      "dietary_principles": [
+        "Sesame seeds (Tila) are best for Asthi Dhatu per Charaka",
+        "Include cow milk (Ksheera), ghee (Ghrita) for calcium and fat-soluble vitamin absorption",
+        "Almond (Vatada) milk soaked overnight and ground",
+        "Avoid excess Vata-aggravating foods: raw salads, dry foods, carbonated drinks"
+      ],
+      "contraindications": [
+        "Severe Vitamin D deficiency (<10 ng/mL) requires pharmaceutical supplementation",
+        "Coral-based preparations must be properly sourced and prepared",
+        "Monitor serum calcium when supplementing"
+      ]
+    },
+    "liver_stress": {
+      "dosha": "Pitta",
+      "description": "Early Yakrit Dushti — Pitta aggravation causing hepatic stress without structural damage",
+      "remedies": [
+        {
+          "name": "Katuki Churna",
+          "ingredients": [
+            "Katuki (Picrorhiza kurroa)"
+          ],
+          "preparation": "Root dried and powdered",
+          "dosage": "1-3 g with honey, twice daily",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 25",
+          "mechanism": "Premier hepatoprotective herb in Ayurveda; kutkin protects hepatocytes from oxidative damage"
+        },
+        {
+          "name": "Kumaryasava",
+          "ingredients": [
+            "Kumari (Aloe vera)",
+            "Guda",
+            "Dhataki Pushpa",
+            "Loha Churna"
+          ],
+          "preparation": "Asava fermentation per classical method",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 13",
+          "mechanism": "Aloe vera supports hepatocyte regeneration and reduces liver inflammation"
+        }
+      ],
+      "lifestyle": [
+        "Eliminate or reduce alcohol consumption",
+        "Reduce processed food intake",
+        "Include liver-supportive foods daily"
+      ],
+      "yoga_asanas": [
+        "Ardha Matsyendrasana",
+        "Dhanurasana",
+        "Bhujangasana"
+      ],
+      "pranayama": [
+        "Kapalabhati — 3 rounds of 30 strokes",
+        "Sheetali Pranayama — if Pitta is prominent"
+      ],
+      "dietary_principles": [
+        "Include Haridra (turmeric), Katuki, and Bhumyamalaki as regular supplements",
+        "Bitter vegetables: Karavellaka (bitter gourd), Patola (pointed gourd)",
+        "Avoid all hepatotoxins — alcohol, paracetamol excess, fried foods"
+      ],
+      "contraindications": [
+        "Persistent elevated liver enzymes need medical workup",
+        "Rule out viral hepatitis before attributing to lifestyle alone"
+      ]
+    },
+    "insulin_resistance": {
+      "dosha": "Kapha-Pitta",
+      "description": "Meda-Dhatvagni Mandya — impaired fat tissue metabolism with Kapha blocking insulin receptors",
+      "remedies": [
+        {
+          "name": "Chandraprabha Vati",
+          "ingredients": [
+            "Chandraprabha group herbs",
+            "Shilajit",
+            "Guggulu",
+            "Triphala",
+            "Trikatu"
+          ],
+          "preparation": "Classical multi-herb preparation",
+          "dosage": "2 tablets (250 mg each) twice daily with warm water",
+          "source": "Sharangdhara Samhita, Madhyama Khanda, Ch. 7",
+          "mechanism": "Shilajit fulvic acid improves insulin sensitivity; Guggulu addresses lipid component of insulin resistance"
+        },
+        {
+          "name": "Nishamalaki Churna",
+          "ingredients": [
+            "Nisha (Haridra/Turmeric)",
+            "Amalaki"
+          ],
+          "preparation": "Equal parts mixed",
+          "dosage": "3-5 g with warm water, twice daily",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 6",
+          "mechanism": "Curcumin is a potent insulin sensitizer; Amalaki provides chromium and antioxidant support"
+        }
+      ],
+      "lifestyle": [
+        "Daily vigorous exercise — at least 45 minutes",
+        "Weight reduction through Kapha-pacifying regimen",
+        "Avoid sedentary habits and excessive sleep"
+      ],
+      "yoga_asanas": [
+        "Surya Namaskar — 12 rounds",
+        "Mandukasana — pancreatic stimulation",
+        "Ardha Matsyendrasana"
+      ],
+      "pranayama": [
+        "Kapalabhati — 5 rounds of 30 strokes",
+        "Bhastrika — 3 rounds"
+      ],
+      "dietary_principles": [
+        "Low glycaemic index foods: barley, millets, green gram",
+        "Include Methi (fenugreek), Jambu seeds, turmeric",
+        "Avoid all refined carbohydrates and sugars",
+        "Favour Tikta and Katu Rasa — bitter and pungent tastes"
+      ],
+      "contraindications": [
+        "If HbA1c > 6.5%, concurrent allopathic management needed",
+        "Monitor fasting insulin and glucose regularly"
+      ]
+    },
+    "kidney_impairment": {
+      "dosha": "Vata-Pitta",
+      "description": "Mutravaha Srotas Dushti — impaired urinary channel function with Vata-Pitta vitiation",
+      "remedies": [
+        {
+          "name": "Gokshuradi Guggulu",
+          "ingredients": [
+            "Gokshura",
+            "Guggulu",
+            "Triphala",
+            "Trikatu",
+            "Musta"
+          ],
+          "preparation": "Guggulu processed with Gokshura decoction",
+          "dosage": "2 tablets (250 mg each) twice daily with warm water",
+          "source": "Sushruta Samhita, Chikitsa Sthana",
+          "mechanism": "Gokshura is Mutrala (diuretic) and Brimhana (nourishing); supports renal function without depleting electrolytes"
+        },
+        {
+          "name": "Punarnava Churna",
+          "ingredients": [
+            "Punarnava (Boerhavia diffusa)"
+          ],
+          "preparation": "Whole plant dried and powdered",
+          "dosage": "3-5 g with warm water, twice daily",
+          "source": "Charaka Samhita, Sutra Sthana; Bhavaprakasha",
+          "mechanism": "Name means 'one who renews the body'; punarnavine is nephroprotective and diuretic"
+        }
+      ],
+      "lifestyle": [
+        "Adequate but not excessive hydration — adjust per GFR",
+        "Avoid nephrotoxic substances — NSAIDs, excess protein",
+        "Regular monitoring of renal function"
+      ],
+      "yoga_asanas": [
+        "Pawanmuktasana — kidney-friendly gentle movement",
+        "Bhujangasana — stimulates kidneys",
+        "Shavasana — stress reduction"
+      ],
+      "pranayama": [
+        "Anulom Vilom — gentle, balancing",
+        "Bhramari — calming"
+      ],
+      "dietary_principles": [
+        "Moderate protein intake per renal function",
+        "Limit sodium, potassium, phosphorus as per stage of disease",
+        "Favour Gokshura-infused water throughout the day",
+        "Include Varuna bark decoction for renal support"
+      ],
+      "contraindications": [
+        "CKD Stage 4-5 requires nephrologist management — Ayurveda is adjunctive",
+        "Potassium-rich Ayurvedic herbs may be dangerous in advanced CKD",
+        "Avoid Bhasma (metal) preparations if GFR < 30"
+      ]
+    },
+    "iron_deficiency": {
+      "dosha": "Vata-Pitta",
+      "description": "Panduroga — primarily Pitta-Rakta depletion with secondary Vata aggravation",
+      "remedies": [
+        {
+          "name": "Lohasava",
+          "ingredients": [
+            "Loha Bhasma (Iron calx)",
+            "Dhataki",
+            "Guda",
+            "Triphala",
+            "Trikatu",
+            "Musta"
+          ],
+          "preparation": "Asava fermentation with iron Bhasma for enhanced absorption",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 16 (Panduroga Chikitsa)",
+          "mechanism": "Nano-sized iron from Bhasma is highly bioavailable; Dhataki-fermented medium enhances absorption; Trikatu improves iron uptake"
+        },
+        {
+          "name": "Punarnava Mandura",
+          "ingredients": [
+            "Punarnava",
+            "Mandura Bhasma",
+            "Triphala",
+            "Trikatu",
+            "Vidanga",
+            "Chitraka"
+          ],
+          "preparation": "Iron calx processed with Punarnava decoction; tablet form",
+          "dosage": "2 tablets (250 mg each) twice daily with buttermilk or orange juice",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 16",
+          "mechanism": "Mandura Bhasma provides bioavailable iron; Punarnava addresses oedema seen in chronic anaemia; Trikatu enhances absorption"
+        },
+        {
+          "name": "Dhatri Lauh",
+          "ingredients": [
+            "Amalaki (Emblica officinalis)",
+            "Loha Bhasma",
+            "Yashti Madhu (Glycyrrhiza)"
+          ],
+          "preparation": "Loha Bhasma triturated with Amalaki juice multiple times; dried and tableted",
+          "dosage": "2 tablets (250 mg each) twice daily with honey",
+          "source": "Bhaishajya Ratnavali, Panduroga Chikitsa",
+          "mechanism": "Amalaki vitamin C dramatically enhances iron absorption; Yashti Madhu soothes GI tract preventing iron-related gastric irritation"
+        }
+      ],
+      "lifestyle": [
+        "Cook in iron vessels (Loha Patra) — traditional iron supplementation",
+        "Avoid tea and coffee with meals — tannins inhibit iron absorption",
+        "Include vitamin C-rich foods with iron-rich meals",
+        "Adequate rest — avoid overexertion in moderate-severe anaemia"
+      ],
+      "yoga_asanas": [
+        "Shavasana — energy conservation in anaemia",
+        "Gentle Surya Namaskar — improves circulation",
+        "Viparita Karani (Legs Up the Wall) — gentle inversion for circulation"
+      ],
+      "pranayama": [
+        "Anulom Vilom — improves oxygenation",
+        "Deep abdominal breathing — enhances oxygen carrying capacity utilisation"
+      ],
+      "dietary_principles": [
+        "Dates (Kharjura), pomegranate (Dadima), and jaggery (Guda) are Raktavardhaka (blood builders)",
+        "Include green leafy vegetables — especially Palak (spinach) and Methi",
+        "Soak grains and legumes to reduce phytates that block iron",
+        "Black sesame seeds (Krishna Tila) with honey — traditional Rakta Dhatu builder"
+      ],
+      "contraindications": [
+        "Severe anaemia (Hb < 7 g/dL) requires blood transfusion — do not delay",
+        "Iron Bhasmas in excess can cause iron overload — periodic CBC monitoring needed",
+        "Investigate cause of anaemia (menorrhagia, GI bleeding) alongside treatment"
+      ]
+    },
+    "inflammation": {
+      "dosha": "Pitta",
+      "description": "Amavata / Daha — Pitta aggravation with Ama (toxin) accumulation in Dhatus",
+      "remedies": [
+        {
+          "name": "Guggulu Tiktaka Ghrita",
+          "ingredients": [
+            "Guggulu",
+            "Tikta Dravyas (bitter herbs group)",
+            "Go Ghrita (cow ghee)",
+            "Neem",
+            "Guduchi",
+            "Patola"
+          ],
+          "preparation": "Ghrita (medicated ghee) prepared by cooking herbs in ghee per Sneha Kalpana",
+          "dosage": "5-10 ml with warm water, twice daily before meals",
+          "source": "Ashtanga Hridaya, Chikitsa Sthana, Ch. 21",
+          "mechanism": "Ghrita is the best Pitta-shamaka; bitter herbs reduce inflammation; Guduchi (Tinospora cordifolia) is a potent immunomodulator"
+        },
+        {
+          "name": "Amritarishta",
+          "ingredients": [
+            "Guduchi (Tinospora cordifolia)",
+            "Dhataki",
+            "Guda",
+            "Dashamoola",
+            "Musta"
+          ],
+          "preparation": "Arishta fermentation with Guduchi as primary herb",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana",
+          "mechanism": "Guduchi is Amrita (divine nectar); tinosporin and berberine have potent anti-inflammatory and immunomodulatory activity"
+        }
+      ],
+      "lifestyle": [
+        "Stress management — chronic stress perpetuates Pitta inflammation",
+        "Regular Abhyanga (oil massage) with cooling oils (coconut, Chandanadi)",
+        "Avoid excessive sun exposure and heat",
+        "Adequate sleep — 7-8 hours; sleep by 10 PM (Pitta time begins)"
+      ],
+      "yoga_asanas": [
+        "Gentle Hatha Yoga — avoid overly vigorous practice",
+        "Shavasana — deep relaxation",
+        "Supta Baddha Konasana — restorative",
+        "Viparita Karani — cooling inversion"
+      ],
+      "pranayama": [
+        "Sheetali Pranayama — cooling breath, reduces Pitta",
+        "Sheetkari Pranayama — cooling through teeth",
+        "Anulom Vilom — 15 minutes for balance"
+      ],
+      "dietary_principles": [
+        "Anti-inflammatory diet: Tikta (bitter) and Madhura (sweet) Rasa dominant",
+        "Include Guduchi Satva, Amalaki, turmeric daily",
+        "Avoid Vidahi (foods causing burning) — chillies, fermented foods, alcohol",
+        "Cooling foods: coconut, cucumber, coriander, fennel",
+        "Ghee is anti-inflammatory per Ayurveda — 1-2 tsp daily with meals"
+      ],
+      "contraindications": [
+        "Chronic inflammatory conditions (RA, IBD) need concurrent allopathic management",
+        "Ghrita (ghee) preparations avoided in severe dyslipidemia and obesity",
+        "Guduchi may lower blood sugar — monitor in diabetic patients"
+      ]
+    },
+    "pancreatic_abnormality": {
+      "dosha": "Pitta",
+      "description": "Agnyashaya Shotha — acute Pitta aggravation in the seat of Jatharagni",
+      "remedies": [
+        {
+          "name": "Sutashekhar Rasa",
+          "ingredients": [
+            "Shuddha Parada",
+            "Shuddha Gandhaka",
+            "Tamra Bhasma",
+            "Shankha Bhasma",
+            "Dhattura seed juice",
+            "Shunthi",
+            "Ela"
+          ],
+          "preparation": "Classical Rasa Shastra preparation; metals purified and incinerated",
+          "dosage": "125-250 mg with honey, twice daily (under strict supervision only)",
+          "source": "Rasa Ratna Samucchaya",
+          "mechanism": "Shankha Bhasma (conch shell) is antacid; controls Pitta-driven acid secretion; provides calcium carbonate in nano form"
+        }
+      ],
+      "lifestyle": [
+        "Strict Langhana (fasting/light diet) during acute phase",
+        "Absolute avoidance of alcohol",
+        "Avoid heavy, oily, fried foods permanently",
+        "Stress management — Pitta aggravated by anger and stress"
+      ],
+      "yoga_asanas": [
+        "Only restorative poses during and after acute episodes",
+        "Shavasana",
+        "Gentle Vajrasana after meals"
+      ],
+      "pranayama": [
+        "Sheetali Pranayama — cooling, reduces Pitta",
+        "Chandra Bhedana (Left Nostril Breathing) — cooling"
+      ],
+      "dietary_principles": [
+        "Ultra-low-fat diet — <20 g fat/day",
+        "Mudga Yusha (green gram soup) with minimal spice",
+        "Old rice (Purana Shali) gruel during recovery",
+        "Avoid all pungent, sour, and salty foods",
+        "Coconut water for hydration and cooling"
+      ],
+      "contraindications": [
+        "Acute pancreatitis is a medical emergency — hospitalization required",
+        "Rasa Shastra preparations absolutely require expert supervision",
+        "Do not use Bhasmas if pancreatic function is severely compromised"
+      ]
+    },
+    "fatty_liver": {
+      "dosha": "Kapha-Pitta",
+      "description": "Non-alcoholic fatty liver disease (NAFLD) — Yakrit Roga with Meda Dhatu vitiation",
+      "remedies": [
+        {
+          "name": "Arogyavardhini Vati",
+          "ingredients": [
+            "Shuddha Parada",
+            "Shuddha Gandhaka",
+            "Loha Bhasma",
+            "Abhraka Bhasma",
+            "Tamra Bhasma",
+            "Triphala",
+            "Shuddha Shilajit",
+            "Shuddha Guggulu",
+            "Chitraka",
+            "Katuki"
+          ],
+          "preparation": "Classical Rasa Shastra preparation: purified metals and herbs ground into tablet form per Rasa Ratna Samucchaya guidelines",
+          "dosage": "1-2 tablets (250 mg each) twice daily with lukewarm water, before meals",
+          "source": "Rasa Ratna Samucchaya, Ch. 20; widely referenced in Charaka Samhita Chikitsa Sthana",
+          "mechanism": "Katuki (Picrorhiza kurroa) provides hepatoprotective kutkin; Triphala supports bile flow; Guggulu reduces lipid accumulation in hepatocytes"
+        },
+        {
+          "name": "Kumaryasava",
+          "ingredients": [
+            "Kumari (Aloe vera)",
+            "Guda (Jaggery)",
+            "Dhataki Pushpa",
+            "Loha Churna",
+            "Musta",
+            "Haritaki"
+          ],
+          "preparation": "Asava preparation: herbs fermented with jaggery in earthen pot for 30 days",
+          "dosage": "15-20 ml with equal water, twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 13 (Panduroga Chikitsa)",
+          "mechanism": "Aloe vera (Kumari) supports hepatocyte regeneration; self-generated alcohol acts as bio-enhancer for herb absorption; iron content supports hemoglobin"
+        },
+        {
+          "name": "Katuki Churna",
+          "ingredients": [
+            "Katuki (Picrorhiza kurroa)"
+          ],
+          "preparation": "Root dried in shade and powdered finely; sieved through cloth",
+          "dosage": "1-3 g with honey or warm water, twice daily before meals",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 25 (Dravyaguna)",
+          "mechanism": "Kutkin and picroside compounds provide hepatoprotective, cholagogue, and anti-inflammatory effects; reduces Pitta vitiation in Yakrit"
+        }
+      ],
+      "lifestyle": [
+        "Wake before sunrise (Brahma Muhurta) for optimal liver metabolism",
+        "Avoid daytime sleep (Divaswapna) — aggravates Kapha in liver",
+        "Light dinner before sunset; allow 3-hour gap before sleep",
+        "Brisk walking for 30-45 minutes daily"
+      ],
+      "yoga_asanas": [
+        "Ardha Matsyendrasana (Half Spinal Twist) — massages liver and spleen",
+        "Dhanurasana (Bow Pose) — stimulates abdominal organs",
+        "Bhujangasana (Cobra Pose) — stretches abdominal muscles, aids liver",
+        "Gomukhasana (Cow Face Pose) — stimulates kidneys and liver"
+      ],
+      "pranayama": [
+        "Kapalabhati (Skull Shining Breath) — 3 rounds of 30 strokes",
+        "Bhastrika Pranayama (Bellows Breath) — 2 rounds of 20 strokes"
+      ],
+      "dietary_principles": [
+        "Favour Tikta (bitter) and Kashaya (astringent) Rasa to pacify Kapha-Pitta",
+        "Include bitter gourd (Karavellaka), turmeric (Haridra), and neem leaves",
+        "Avoid Snigdha (oily), Guru (heavy) foods — no fried items",
+        "Use old barley (Yava) and green gram (Mudga) as staple grains/pulses",
+        "Drink warm water infused with cumin (Jeeraka) throughout the day"
+      ],
+      "contraindications": [
+        "Avoid Arogyavardhini Vati during pregnancy and lactation",
+        "Do not use metal-based Bhasmas without practitioner supervision",
+        "Discontinue if gastric irritation occurs"
+      ]
+    },
+    "hyperthyroidism": {
+      "dosha": "Vata-Pitta",
+      "description": "Atisweda Roga — excessive metabolic fire (Agni) with Vata-Pitta vitiation",
+      "remedies": [
+        {
+          "name": "Shatavari Ghrita",
+          "ingredients": [
+            "Shatavari (Asparagus racemosus)",
+            "Cow Ghee",
+            "Milk"
+          ],
+          "preparation": "Shatavari root boiled in ghee with milk as liquid medium until ghee remains",
+          "dosage": "1 teaspoon twice daily with warm milk",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 30 (Yonivyapat)",
+          "mechanism": "Shatavari is cooling (Sheeta Virya) and nourishing; ghee medium reduces excess Pitta and Vata; balances thyroid hyperactivity"
+        },
+        {
+          "name": "Chandanadi Vati",
+          "ingredients": [
+            "Chandana (Sandalwood)",
+            "Amalaki",
+            "Ushira (Vetiver)",
+            "Padmaka"
+          ],
+          "preparation": "Fine powders mixed with rose water, formed into tablets, dried in shade",
+          "dosage": "2 tablets twice daily with cool water",
+          "source": "Sushruta Samhita, Uttara Tantra, Ch. 40",
+          "mechanism": "Cooling herbs reduce Pitta-driven hypermetabolism; Chandana calms nervous system"
+        },
+        {
+          "name": "Praval Pishti",
+          "ingredients": [
+            "Praval (Coral)",
+            "Rose water"
+          ],
+          "preparation": "Coral calcium triturated with rose water for 21 days",
+          "dosage": "250-500 mg twice daily with honey",
+          "source": "Rasa Ratna Samucchaya, referenced in Charaka Samhita context",
+          "mechanism": "Calcium-rich coral supports bones weakened by hyperthyroidism; cooling Pitta-pacifying properties"
+        }
+      ],
+      "lifestyle": [
+        "Avoid excessive heat and sun exposure",
+        "Regular oil massage (Abhyanga) with coconut oil",
+        "Meditation and Yoga Nidra for calming overactive mind",
+        "Adequate rest — avoid overexertion"
+      ],
+      "yoga_asanas": [
+        "Sarvangasana (Shoulder Stand) — directly regulates thyroid",
+        "Halasana (Plough Pose) — stimulates throat region",
+        "Setubandhasana (Bridge Pose) — balances thyroid",
+        "Shavasana (Corpse Pose) — deep relaxation"
+      ],
+      "pranayama": [
+        "Sheetali Pranayama (Cooling Breath) — cools excess Pitta",
+        "Chandra Bhedana (Left Nostril Breathing) — cooling effect",
+        "Bhramari (Humming Bee Breath) — calms nervous system"
+      ],
+      "dietary_principles": [
+        "Favour cool, sweet, bitter foods (Sheeta, Madhura, Tikta Rasa)",
+        "Increase dairy, coconut, sweet fruits",
+        "Avoid spicy, sour, fermented foods",
+        "Drink coconut water and cool herbal teas"
+      ],
+      "contraindications": [
+        "Avoid Kapalabhati and Bhastrika — too heating",
+        "Do not use Shilajit — increases metabolism further"
+      ]
+    },
+    "anemia": {
+      "dosha": "Vata-Pitta (Pandu Roga)",
+      "description": "Pandu Roga — pallor disease with Rasa-Rakta Dhatu depletion",
+      "remedies": [
+        {
+          "name": "Lohasava",
+          "ingredients": [
+            "Loha Bhasma (Iron calx)",
+            "Triphala",
+            "Chitraka",
+            "Dhataki",
+            "Guda"
+          ],
+          "preparation": "Iron calx with herbs fermented in jaggery solution for 30 days",
+          "dosage": "15-20 ml with equal water after meals, twice daily",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 16 (Panduroga Chikitsa)",
+          "mechanism": "Bio-available iron from Loha Bhasma; Triphala enhances absorption; self-generated alcohol improves bioavailability"
+        },
+        {
+          "name": "Dhatri Lauha",
+          "ingredients": [
+            "Amalaki (Indian Gooseberry)",
+            "Loha Bhasma",
+            "Yashti Madhu (Licorice)"
+          ],
+          "preparation": "Iron calx triturated with Amalaki juice and licorice, formed into tablets",
+          "dosage": "1-2 tablets twice daily after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 16",
+          "mechanism": "Vitamin C from Amalaki dramatically enhances iron absorption; licorice protects gastric mucosa"
+        },
+        {
+          "name": "Punarnava Mandura",
+          "ingredients": [
+            "Punarnava (Boerhavia diffusa)",
+            "Mandura Bhasma (Iron oxide calx)",
+            "Triphala",
+            "Vidanga",
+            "Chitraka"
+          ],
+          "preparation": "Mandura Bhasma triturated with Punarnava juice, mixed with other herb powders",
+          "dosage": "2 tablets (250 mg each) twice daily with buttermilk",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 16 (Panduroga)",
+          "mechanism": "Punarnava is Rasayana for Rakta Dhatu; Mandura Bhasma provides bio-available iron; Triphala supports absorption"
+        }
+      ],
+      "lifestyle": [
+        "Early morning sun exposure (15-20 min) for vitamin D synthesis aiding iron metabolism",
+        "Avoid tea/coffee with meals — inhibit iron absorption",
+        "Regular moderate exercise to stimulate blood formation",
+        "Adequate sleep for Rakta Dhatu regeneration"
+      ],
+      "yoga_asanas": [
+        "Sarvangasana (Shoulder Stand) — improves blood circulation",
+        "Paschimottanasana (Seated Forward Bend) — stimulates spleen",
+        "Trikonasana (Triangle Pose) — improves blood flow",
+        "Shavasana — promotes recovery"
+      ],
+      "pranayama": [
+        "Nadi Shodhana (Alternate Nostril) — balances Prana",
+        "Bhastrika (Bellows Breath) — increases oxygen in blood",
+        "Deep Abdominal Breathing — 10 minutes daily"
+      ],
+      "dietary_principles": [
+        "Iron-rich foods: dates, raisins, pomegranate, beetroot, jaggery, green leafy vegetables",
+        "Pair iron foods with vitamin C (lemon, amla)",
+        "Cook in iron vessels (Loha Patra)",
+        "Avoid excess calcium with iron-rich meals"
+      ],
+      "contraindications": [
+        "Severe anemia (Hb < 7) requires medical intervention first",
+        "Do not rely solely on Ayurvedic iron — monitor Hb levels"
+      ]
+    },
+    "vitamin_b12_deficiency": {
+      "dosha": "Vata",
+      "description": "Vata-driven nerve and blood tissue depletion — Majja and Rakta Dhatu Kshaya",
+      "remedies": [
+        {
+          "name": "Ashwagandha Churna",
+          "ingredients": [
+            "Ashwagandha (Withania somnifera)"
+          ],
+          "preparation": "Root dried, powdered, and sieved; can be mixed with warm milk",
+          "dosage": "3-5 g with warm milk and honey, twice daily",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 1 (Rasayana)",
+          "mechanism": "Ashwagandha is Medhya Rasayana — nourishes nerve tissue (Majja Dhatu) affected by B12 deficiency; adaptogenic properties support overall vitality"
+        },
+        {
+          "name": "Saraswatarishta",
+          "ingredients": [
+            "Brahmi",
+            "Shatavari",
+            "Ashwagandha",
+            "Haritaki",
+            "Dhataki",
+            "Guda"
+          ],
+          "preparation": "Arishta fermentation of nervine herbs with jaggery for 30 days",
+          "dosage": "15-20 ml with equal water after meals",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 1 (Rasayana)",
+          "mechanism": "Brahmi and Ashwagandha provide Medhya (nootropic) support; fermented preparation enhances absorption; supports Majja Dhatu"
+        },
+        {
+          "name": "Bala Ashwagandha Taila (external)",
+          "ingredients": [
+            "Bala (Sida cordifolia)",
+            "Ashwagandha",
+            "Til Taila (Sesame oil)"
+          ],
+          "preparation": "Herbs boiled in sesame oil until oil base remains; strained",
+          "dosage": "External Abhyanga (massage) — apply to hands, feet, and spine daily",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 5 (Matrashiteeya)",
+          "mechanism": "Topical nervine oils penetrate through skin to nourish peripheral nerves; sesame oil is Vata-pacifying"
+        }
+      ],
+      "lifestyle": [
+        "Include fermented foods (traditional buttermilk, kanji) for natural B12",
+        "Regular Abhyanga with sesame oil for peripheral neuropathy",
+        "Avoid excessive fasting — depletes Dhatus",
+        "Ensure adequate dairy/egg intake if not strictly vegan"
+      ],
+      "yoga_asanas": [
+        "Viparita Karani (Legs Up the Wall) — improves nerve blood flow",
+        "Balasana (Child's Pose) — calms Vata",
+        "Supta Baddha Konasana — restorative",
+        "Yoga Nidra — deep nervous system restoration"
+      ],
+      "pranayama": [
+        "Nadi Shodhana (Alternate Nostril) — balances Vata in nervous system",
+        "Bhramari (Humming Bee) — calms Vata and supports Majja Dhatu",
+        "Deep Breathing with counting — 4:7:8 ratio"
+      ],
+      "dietary_principles": [
+        "Dairy products (milk, curd, paneer) are primary vegetarian B12 sources in Ayurveda",
+        "Fermented preparations (Arishta, Asava) contain naturally produced B12",
+        "Ghee — nourishes Majja Dhatu and aids nerve function",
+        "Supplementation recommended for strict vegans alongside Ayurvedic support"
+      ],
+      "contraindications": [
+        "Severe B12 deficiency with neurological symptoms needs medical B12 injections",
+        "Do not delay medical treatment for severe cases"
+      ]
+    },
+    "electrolyte_imbalance": {
+      "dosha": "Vata-Pitta",
+      "description": "Dhatu Kshaya — tissue depletion affecting mineral balance and fluid regulation",
+      "remedies": [
+        {
+          "name": "Lavan Bhaskar Churna",
+          "ingredients": [
+            "Saindhava Lavana (Rock Salt)",
+            "Sauvarchala Lavana",
+            "Vida Lavana",
+            "Samudra Lavana",
+            "Audbhida Lavana",
+            "Trikatu",
+            "Ajwain"
+          ],
+          "preparation": "Five types of salt with carminative herbs ground together and sieved",
+          "dosage": "1-3 g with warm water or buttermilk before meals",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 27 (Annapanavidhi)",
+          "mechanism": "Balanced mineral salts restore electrolyte equilibrium; Trikatu enhances Agni for better mineral absorption"
+        },
+        {
+          "name": "Takra (Medicated Buttermilk)",
+          "ingredients": [
+            "Fresh curd",
+            "Water",
+            "Cumin",
+            "Rock salt",
+            "Fresh ginger"
+          ],
+          "preparation": "Churn curd with water (1:4 ratio), remove butter, add spices",
+          "dosage": "1 glass with meals or between meals, 2-3 times daily",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 27; Chikitsa Sthana, Ch. 19",
+          "mechanism": "Natural electrolyte replacement; probiotics support mineral absorption; cumin and ginger kindle Agni"
+        }
+      ],
+      "lifestyle": [
+        "Stay hydrated with room-temperature water throughout the day",
+        "Avoid excessive sweating without mineral replacement",
+        "Regular meal timing to maintain Agni and absorption",
+        "Coconut water as natural electrolyte source"
+      ],
+      "yoga_asanas": [
+        "Viparita Karani (Legs Up the Wall) — improves fluid circulation",
+        "Supta Baddha Konasana — calms nervous system",
+        "Tadasana (Mountain Pose) — grounding and balancing"
+      ],
+      "pranayama": [
+        "Nadi Shodhana — balances Prana and ion channels",
+        "Deep Abdominal Breathing — calms nervous system"
+      ],
+      "dietary_principles": [
+        "Include all six Rasas (tastes) in meals for mineral balance",
+        "Rock salt (Saindhava) preferred over table salt — richer in minerals",
+        "Coconut water, tender coconut, banana, dates for potassium",
+        "Adequate dairy for calcium; green leafy vegetables for magnesium"
+      ],
+      "contraindications": [
+        "Severe electrolyte imbalance with cardiac symptoms requires emergency medical care",
+        "Do not self-treat severe hyponatremia or hyperkalemia"
+      ]
+    },
+    "proteinuria": {
+      "dosha": "Kapha-Vata",
+      "description": "Prameha-related Mutra Vikara — urinary abnormality with protein loss indicating kidney stress",
+      "remedies": [
+        {
+          "name": "Gokshuradi Guggulu",
+          "ingredients": [
+            "Gokshura (Tribulus terrestris)",
+            "Guggulu",
+            "Triphala",
+            "Trikatu",
+            "Musta"
+          ],
+          "preparation": "Guggulu-based tablet preparation with Gokshura as primary herb",
+          "dosage": "2 tablets twice daily with warm water",
+          "source": "Sushruta Samhita, Chikitsa Sthana, Ch. 7 (Mutraghata)",
+          "mechanism": "Gokshura is the premier Mutrala (diuretic) — protects kidney nephrons; Guggulu reduces inflammation; Triphala supports elimination"
+        },
+        {
+          "name": "Chandraprabha Vati",
+          "ingredients": [
+            "Chandraprabha (Swertia chirayita)",
+            "Shilajit",
+            "Guggulu",
+            "Iron Bhasma",
+            "Triphala",
+            "Vacha"
+          ],
+          "preparation": "Classical tablet preparation per Sharangdhara Samhita methodology",
+          "dosage": "2 tablets twice daily with warm milk or water",
+          "source": "Sharangdhara Samhita, Madhyama Khanda, Ch. 7; referenced in Charaka",
+          "mechanism": "Shilajit provides fulvic acid that supports kidney tissue; Chandraprabha herb is Mutravaha Srotas Shodhaka (urinary channel cleanser)"
+        }
+      ],
+      "lifestyle": [
+        "Moderate protein intake — avoid excess in diet",
+        "Adequate hydration with plain water",
+        "Avoid holding urine (Vegadharana) — Charaka lists this as health-depleting",
+        "Regular Gokshura decoction as kidney tonic"
+      ],
+      "yoga_asanas": [
+        "Baddha Konasana (Bound Angle) — stimulates kidneys",
+        "Supta Padangusthasana — gentle kidney stretch",
+        "Viparita Karani — improves renal blood flow"
+      ],
+      "pranayama": [
+        "Nadi Shodhana — balances Apana Vayu governing kidneys",
+        "Ujjayi — gentle, calming to nervous system"
+      ],
+      "dietary_principles": [
+        "Moderate protein — avoid excess meat and dairy",
+        "Increase Gokshura tea, barley water, coconut water",
+        "Avoid excess salt and processed foods",
+        "Light, easily digestible meals to reduce kidney burden"
+      ],
+      "contraindications": [
+        "Heavy proteinuria (> 3g/day) requires nephrologist evaluation",
+        "Do not replace medical management for nephrotic syndrome"
+      ]
+    },
+    "folate_deficiency": {
+      "dosha": "Vata-Pitta",
+      "description": "Rakta Dhatu Kshaya — blood tissue depletion affecting cell division and DNA synthesis",
+      "remedies": [
+        {
+          "name": "Triphala Churna",
+          "ingredients": [
+            "Amalaki (Emblica officinalis)",
+            "Haritaki (Terminalia chebula)",
+            "Vibhitaki (Terminalia bellirica)"
+          ],
+          "preparation": "Equal parts of three fruits dried and powdered; sieved fine",
+          "dosage": "3-5 g with warm water at bedtime",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 25; Chikitsa Sthana, Ch. 1",
+          "mechanism": "Amalaki is among the richest natural sources of vitamin C and folate; Triphala improves gut absorption of nutrients; Rasayana properties rejuvenate Dhatus"
+        },
+        {
+          "name": "Amalaki Rasayana",
+          "ingredients": [
+            "Amalaki (fresh or powder)",
+            "Ghee",
+            "Honey",
+            "Pippali"
+          ],
+          "preparation": "Fresh Amalaki pulp mixed with ghee, honey (unequal quantities), and Pippali powder",
+          "dosage": "1-2 teaspoons daily on empty stomach",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 1 (Rasayana Pada)",
+          "mechanism": "Amalaki is Sarvadosha Shamaka (balances all Doshas); provides natural folate and vitamin C; Rasayana for Rakta Dhatu"
+        }
+      ],
+      "lifestyle": [
+        "Include fresh green leafy vegetables daily (Shaka Varga)",
+        "Consume citrus fruits for natural folate + vitamin C",
+        "Avoid excess alcohol — depletes folate stores",
+        "Regular meal timing for optimal nutrient absorption"
+      ],
+      "yoga_asanas": [
+        "Sarvangasana — improves thyroid and blood formation",
+        "Uttanasana (Standing Forward Bend) — blood flow to digestive organs",
+        "Paschimottanasana — stimulates digestion and nutrient absorption"
+      ],
+      "pranayama": [
+        "Bhastrika — increases oxygenation of blood",
+        "Nadi Shodhana — balances nutrient distribution through Nadis"
+      ],
+      "dietary_principles": [
+        "Green leafy vegetables (spinach, methi, bathua) are richest folate sources",
+        "Legumes (moong, masoor, rajma) provide excellent plant folate",
+        "Amalaki/Amla — daily consumption recommended",
+        "Avoid overcooking vegetables — destroys folate"
+      ],
+      "contraindications": [
+        "Megaloblastic anemia requires medical folate/B12 supplementation",
+        "Pregnant women with folate deficiency need medical folic acid"
+      ]
+    },
+    "prehypertension": {
+      "dosha": "Pitta-Kapha",
+      "description": "Raktachapa Vriddhi — early blood pressure elevation with Rakta Dhatu and Pitta vitiation",
+      "remedies": [
+        {
+          "name": "Sarpagandha Vati",
+          "ingredients": [
+            "Sarpagandha (Rauwolfia serpentina)",
+            "Jatamansi",
+            "Bhringaraja",
+            "Shankhapushpi"
+          ],
+          "preparation": "Herbs powdered and formed into tablets with gum acacia binder",
+          "dosage": "1-2 tablets at bedtime with warm water",
+          "source": "Referenced in Charaka Samhita context; classical Ayurvedic pharmacopoeia",
+          "mechanism": "Sarpagandha contains reserpine alkaloids — potent antihypertensive; Jatamansi calms nervous system; Shankhapushpi reduces mental stress"
+        },
+        {
+          "name": "Arjuna Ksheerapaka",
+          "ingredients": [
+            "Arjuna bark (Terminalia arjuna)",
+            "Milk",
+            "Water"
+          ],
+          "preparation": "Arjuna bark powder boiled in milk and water (1:8:32) until milk portion remains",
+          "dosage": "1 cup daily in the morning",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 25; Chikitsa Sthana, Ch. 26 (Hridroga)",
+          "mechanism": "Arjuna is Hridya (cardioprotective) — strengthens cardiac muscle, reduces peripheral resistance; milk medium nourishes Rasa Dhatu"
+        }
+      ],
+      "lifestyle": [
+        "Reduce salt intake — prefer Saindhava (rock salt) in small amounts",
+        "Daily walking 30-45 minutes in nature (Vanacharya)",
+        "Meditation 20 minutes daily to reduce stress-driven Pitta",
+        "Avoid anger, competitive stress — aggravates Pitta and blood pressure"
+      ],
+      "yoga_asanas": [
+        "Shavasana — deep relaxation reduces blood pressure",
+        "Sukhasana with breath awareness",
+        "Uttanasana (Forward Bend) — calms nervous system",
+        "Viparita Karani — reduces peripheral vascular resistance"
+      ],
+      "pranayama": [
+        "Nadi Shodhana — most effective pranayama for blood pressure",
+        "Sheetali (Cooling Breath) — reduces Pitta",
+        "Bhramari — calms sympathetic nervous system",
+        "Avoid Bhastrika and Kapalabhati — can raise BP"
+      ],
+      "dietary_principles": [
+        "DASH-like Ayurvedic approach: fruits, vegetables, whole grains, low-fat dairy",
+        "Reduce Lavana (salt) — maximum 1/4 tsp Saindhava per meal",
+        "Increase Tikta (bitter) and Kashaya (astringent) Rasa foods",
+        "Garlic (Lasuna) — 2 cloves daily, well-established Raktachapa-reducing effect"
+      ],
+      "contraindications": [
+        "BP consistently > 140/90 requires medical antihypertensive management",
+        "Sarpagandha should not be used during pregnancy or with depression"
+      ]
+    },
+    "cardiac_risk": {
+      "dosha": "Kapha-Pitta",
+      "description": "Hridroga — heart disease risk with Rasa-Rakta Dhatu vitiation and Srotas blockage",
+      "remedies": [
+        {
+          "name": "Arjuna Churna",
+          "ingredients": [
+            "Arjuna bark (Terminalia arjuna)"
+          ],
+          "preparation": "Dried bark powdered and sieved fine",
+          "dosage": "3-5 g with warm milk or water, twice daily",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 26 (Hridroga Chikitsa)",
+          "mechanism": "Arjuna is the foremost Hridya Dravya in Ayurveda — rich in arjunolic acid that strengthens cardiac muscle, reduces LDL oxidation, and improves ejection fraction"
+        },
+        {
+          "name": "Hridayarnava Rasa",
+          "ingredients": [
+            "Arjuna",
+            "Akika Pishti (Agate)",
+            "Mukta Pishti (Pearl)",
+            "Praval Pishti (Coral)",
+            "Loha Bhasma"
+          ],
+          "preparation": "Classical Rasa preparation with gem/mineral Pishtis triturated with Arjuna decoction",
+          "dosage": "125-250 mg twice daily with honey and Arjuna Ksheerapaka",
+          "source": "Rasa Ratna Samucchaya; referenced in cardiac Chikitsa traditions",
+          "mechanism": "Calcium from coral and pearl supports cardiac conductivity; Arjuna provides cardioprotection; mineral Bhasmas strengthen Hridaya"
+        },
+        {
+          "name": "Triphala Guggulu",
+          "ingredients": [
+            "Triphala",
+            "Guggulu (Commiphora mukul)",
+            "Pippali"
+          ],
+          "preparation": "Guggulu softened and mixed with Triphala and Pippali powders, formed into tablets",
+          "dosage": "2 tablets twice daily with warm water",
+          "source": "Sushruta Samhita, Chikitsa Sthana; Sharangdhara Samhita",
+          "mechanism": "Guggulsterones lower cholesterol and triglycerides — well-studied lipid-lowering; Triphala provides antioxidant support; Pippali enhances bioavailability"
+        }
+      ],
+      "lifestyle": [
+        "Daily walking 45-60 minutes — gentle cardio per Charaka's exercise guidelines",
+        "Manage stress through meditation and Pranayama",
+        "Avoid smoking and excess alcohol absolutely",
+        "Maintain healthy weight — reduce Meda Dhatu excess"
+      ],
+      "yoga_asanas": [
+        "Tadasana — improves posture and circulation",
+        "Vrikshasana (Tree Pose) — improves balance and heart rate variability",
+        "Setubandhasana (Bridge) — opens chest, strengthens heart area",
+        "Shavasana — cardiac rest and recovery"
+      ],
+      "pranayama": [
+        "Nadi Shodhana — balances autonomic nervous system",
+        "Bhramari — reduces heart rate and anxiety",
+        "Ujjayi — gentle cardiac toning",
+        "Avoid vigorous Kapalabhati if BP elevated"
+      ],
+      "dietary_principles": [
+        "Garlic (Lasuna) 2-3 cloves daily — Hridya and lipid-lowering",
+        "Omega-3 from flaxseeds (Atasi) and walnuts (Akhrot)",
+        "Reduce Snigdha (oily), Guru (heavy) foods",
+        "Include Arjuna bark tea daily as cardiac tonic"
+      ],
+      "contraindications": [
+        "Acute cardiac events require emergency medical care",
+        "Do not discontinue prescribed cardiac medications for Ayurvedic alternatives"
+      ]
+    },
+    "vitamin_a_deficiency": {
+      "dosha": "Vata-Pitta",
+      "description": "Netra Roga and Twak Roga — eye and skin disorders from Rasa Dhatu depletion",
+      "remedies": [
+        {
+          "name": "Triphala Ghrita",
+          "ingredients": [
+            "Triphala",
+            "Cow Ghee",
+            "Water"
+          ],
+          "preparation": "Triphala decoction used as liquid medium to prepare medicated ghee",
+          "dosage": "1-2 teaspoons with warm water, twice daily",
+          "source": "Sushruta Samhita, Uttara Tantra, Ch. 17 (Netra Chikitsa)",
+          "mechanism": "Amalaki in Triphala is rich in vitamin A precursors; ghee is the ideal medium for fat-soluble vitamin absorption; classical eye tonic"
+        },
+        {
+          "name": "Shatavari Kalpa",
+          "ingredients": [
+            "Shatavari (Asparagus racemosus)",
+            "Sugar",
+            "Cardamom"
+          ],
+          "preparation": "Shatavari root powder processed with milk and sugar",
+          "dosage": "5-10 g with warm milk, once daily",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 30",
+          "mechanism": "Shatavari nourishes Rasa and Rakta Dhatu; supports mucous membrane health; rich in saponins that enhance nutrient absorption"
+        }
+      ],
+      "lifestyle": [
+        "Include orange/yellow vegetables daily (carrots, sweet potato, pumpkin)",
+        "Moderate sun exposure for overall Dhatu health",
+        "Ghee consumption daily — medium for fat-soluble vitamins",
+        "Regular eye exercises (Netra Vyayama)"
+      ],
+      "yoga_asanas": [
+        "Trataka (Candle Gazing) — classical eye exercise",
+        "Sarvangasana — improves blood flow to eyes",
+        "Shavasana with eye palming"
+      ],
+      "pranayama": [
+        "Nadi Shodhana — improves Prana to sensory organs",
+        "Bhramari with eyes closed — soothes optic nerves"
+      ],
+      "dietary_principles": [
+        "Ghee — primary fat-soluble vitamin carrier in Ayurveda",
+        "Carrot, mango, papaya, drumstick leaves — beta-carotene rich",
+        "Liver (for non-vegetarians) — richest preformed vitamin A source",
+        "Moringa (Sahijan) leaves — excellent plant source"
+      ],
+      "contraindications": [
+        "Severe night blindness or keratomalacia requires medical vitamin A supplementation",
+        "Pregnant women should not take excess preformed vitamin A"
+      ]
+    },
+    "vitamin_e_deficiency": {
+      "dosha": "Vata",
+      "description": "Vata Vyadhi — nerve and tissue oxidative damage from Vata-driven Dhatu Kshaya",
+      "remedies": [
+        {
+          "name": "Ashwagandha Ghrita",
+          "ingredients": [
+            "Ashwagandha",
+            "Cow Ghee",
+            "Milk"
+          ],
+          "preparation": "Ashwagandha root powder boiled in ghee with milk until ghee base remains",
+          "dosage": "1-2 teaspoons daily with warm milk",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 1 (Rasayana)",
+          "mechanism": "Ghee provides fat-soluble vitamin medium; Ashwagandha is antioxidant Rasayana; nourishes Majja and Asthi Dhatu"
+        },
+        {
+          "name": "Til Taila (Sesame Oil) Abhyanga",
+          "ingredients": [
+            "Til Taila (Sesame oil)"
+          ],
+          "preparation": "Warm sesame oil for external full-body massage",
+          "dosage": "Daily Abhyanga before bath — 15-20 minutes",
+          "source": "Charaka Samhita, Sutra Sthana, Ch. 5 (Matrashiteeya)",
+          "mechanism": "Sesame oil is richest culinary source of vitamin E; transdermal absorption provides antioxidant benefit; pacifies Vata excellently"
+        }
+      ],
+      "lifestyle": [
+        "Daily sesame oil consumption (1-2 tsp) — richest vitamin E food source",
+        "Include almonds, sunflower seeds, wheat germ daily",
+        "Regular Abhyanga (oil massage) with sesame oil",
+        "Adequate dietary fat to ensure fat-soluble vitamin absorption"
+      ],
+      "yoga_asanas": [
+        "Surya Namaskar — full body circulation",
+        "Sarvangasana — improves nutrient distribution",
+        "Matsyasana (Fish Pose) — opens chest, improves antioxidant circulation"
+      ],
+      "pranayama": [
+        "Nadi Shodhana — balances Vata and improves tissue oxygenation",
+        "Ujjayi — gentle warming pranayama"
+      ],
+      "dietary_principles": [
+        "Sesame seeds and oil (Til) — Ayurveda's premier Vata-pacifying fat, richest in vitamin E",
+        "Almonds (Badam) — soaked and peeled, 8-10 daily",
+        "Wheat germ, sunflower seeds, avocado",
+        "Ghee in diet ensures absorption of all fat-soluble vitamins"
+      ],
+      "contraindications": [
+        "Peripheral neuropathy from vitamin E deficiency may need medical supplementation",
+        "Do not follow very low-fat diets — impairs fat-soluble vitamin absorption"
+      ]
+    },
+    "zinc_deficiency": {
+      "dosha": "Vata-Kapha",
+      "description": "Ojas Kshaya — depletion of vital essence affecting immunity and tissue repair",
+      "remedies": [
+        {
+          "name": "Yashada Bhasma",
+          "ingredients": [
+            "Yashada (Zinc)",
+            "Aloe vera juice"
+          ],
+          "preparation": "Zinc purified (Shodhana) and incinerated (Marana) with Aloe vera juice per Rasa Shastra methodology",
+          "dosage": "125-250 mg with honey, twice daily",
+          "source": "Rasa Ratna Samucchaya; referenced in Charaka Samhita mineral therapeutics",
+          "mechanism": "Bio-available zinc from Bhasma preparation; supports immune function (Vyadhikshamatva) and tissue healing (Dhatu Poshana)"
+        },
+        {
+          "name": "Shatavari Churna",
+          "ingredients": [
+            "Shatavari (Asparagus racemosus)"
+          ],
+          "preparation": "Root powder dried and sieved",
+          "dosage": "3-5 g with warm milk and honey, twice daily",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 30",
+          "mechanism": "Shatavari is Rasayana — nourishes Rasa Dhatu and supports zinc absorption; immunomodulatory saponins boost Ojas"
+        }
+      ],
+      "lifestyle": [
+        "Include pumpkin seeds (Kaddu ke beej) — richest zinc food source",
+        "Soak legumes before cooking to reduce phytates that block zinc",
+        "Regular sleep for immune recovery and Dhatu repair",
+        "Avoid excess phytate-rich foods with zinc-rich meals"
+      ],
+      "yoga_asanas": [
+        "Surya Namaskar — boosts overall immunity",
+        "Bhujangasana — strengthens immune-supporting adrenals",
+        "Padmasana with meditation — supports Ojas"
+      ],
+      "pranayama": [
+        "Kapalabhati — boosts immune function",
+        "Bhastrika — energizing for immune system",
+        "Nadi Shodhana — balances Prana for healing"
+      ],
+      "dietary_principles": [
+        "Pumpkin seeds, chickpeas, lentils, meat, cashews — zinc-rich foods",
+        "Soak and sprout legumes to reduce phytic acid",
+        "Yogurt — fermentation reduces phytates, zinc more available",
+        "Avoid excess coffee/tea with zinc-rich meals"
+      ],
+      "contraindications": [
+        "Severe zinc deficiency with impaired wound healing needs medical supplementation",
+        "Yashada Bhasma should only be from certified Ayurvedic manufacturers"
+      ]
+    },
+    "calcium_magnesium_deficiency": {
+      "dosha": "Vata",
+      "description": "Asthi-Majja Dhatu Kshaya — bone and marrow tissue depletion leading to osteopenia risk",
+      "remedies": [
+        {
+          "name": "Praval Pishti",
+          "ingredients": [
+            "Praval (Coral calcium)",
+            "Rose water"
+          ],
+          "preparation": "Coral triturated with rose water for 21 days until extremely fine",
+          "dosage": "250-500 mg with honey, twice daily",
+          "source": "Rasa Ratna Samucchaya; referenced in Sushruta Samhita mineral therapeutics",
+          "mechanism": "Coral provides bio-available calcium carbonate; rose water processing enhances Pitta-pacifying quality; directly nourishes Asthi Dhatu"
+        },
+        {
+          "name": "Kukkutandatwak Bhasma",
+          "ingredients": [
+            "Kukkutanda Twak (Eggshell)",
+            "Lemon juice"
+          ],
+          "preparation": "Eggshells cleaned, incinerated (Marana) with lemon juice cycles per Rasa Shastra",
+          "dosage": "250-500 mg with warm milk, twice daily",
+          "source": "Referenced in classical Ayurvedic pharmacy texts under Bhasma preparations",
+          "mechanism": "Eggshell is 95% calcium carbonate; Bhasma processing makes it nano-particulate and bio-available; acidic medium of lemon enhances calcium release"
+        },
+        {
+          "name": "Ashwagandha Churna with Milk",
+          "ingredients": [
+            "Ashwagandha",
+            "Warm milk",
+            "Ghee"
+          ],
+          "preparation": "Ashwagandha powder mixed with warm milk and a teaspoon of ghee",
+          "dosage": "3-5 g at bedtime with milk",
+          "source": "Charaka Samhita, Chikitsa Sthana, Ch. 1 (Rasayana)",
+          "mechanism": "Ashwagandha increases bone mineral density (modern research confirms); milk provides calcium and magnesium; ghee aids absorption; Rasayana for Asthi Dhatu"
+        }
+      ],
+      "lifestyle": [
+        "Morning sun exposure 15-20 minutes for vitamin D synthesis (aids calcium absorption)",
+        "Weight-bearing exercise — walking, stair climbing",
+        "Sesame oil Abhyanga — transdermal mineral support",
+        "Avoid excess caffeine — increases calcium excretion"
+      ],
+      "yoga_asanas": [
+        "Vrikshasana (Tree Pose) — weight-bearing balance for bones",
+        "Virabhadrasana (Warrior Poses) — strengthens bones and joints",
+        "Tadasana — improves posture and spinal bone density",
+        "Utkatasana (Chair Pose) — weight-bearing for legs and spine"
+      ],
+      "pranayama": [
+        "Nadi Shodhana — balances Vata (Vata aggravation drives bone loss)",
+        "Deep Breathing — improves oxygen delivery to bone marrow"
+      ],
+      "dietary_principles": [
+        "Dairy (milk, curd, paneer) — primary calcium sources in Ayurveda",
+        "Sesame seeds (Til) — Ayurveda's richest plant calcium source",
+        "Dark leafy greens (ragi/nachni is calcium-rich)",
+        "Ragi (finger millet) — exceptionally rich in calcium, traditional Ayurvedic grain"
+      ],
+      "contraindications": [
+        "Osteoporosis with fracture risk needs medical calcium + vitamin D supplementation",
+        "Kidney stone patients should consult before calcium supplementation"
+      ]
+    }
+  },
+  "abdomen_finding_mappings": {
+    "grade 1 fatty liver": "fatty_liver_grade1",
+    "grade 2 fatty liver": "fatty_liver_grade2",
+    "grade 3 fatty liver": "fatty_liver_grade3",
+    "mild fatty liver": "fatty_liver_grade1",
+    "moderate fatty liver": "fatty_liver_grade2",
+    "severe fatty liver": "fatty_liver_grade3",
+    "hepatomegaly": "hepatomegaly",
+    "enlarged liver": "hepatomegaly",
+    "hepatomegaly (enlarged liver)": "hepatomegaly",
+    "kidney stones": "kidney_stones",
+    "renal calculi": "kidney_stones",
+    "gallstones": "gallstones",
+    "cholelithiasis": "gallstones",
+    "splenomegaly": "splenomegaly",
+    "enlarged spleen": "splenomegaly",
+    "pancreatitis": "pancreatitis",
+    "pancreatic inflammation": "pancreatitis",
+    "cirrhosis": "cirrhosis",
+    "liver cirrhosis": "cirrhosis",
+    "Pancreatic abnormality": "pancreatic_abnormality"
+  }
+}
