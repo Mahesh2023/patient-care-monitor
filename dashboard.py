@@ -132,6 +132,22 @@ if "trauma_support" not in st.session_state:
 if "nutrition_planner" not in st.session_state:
     st.session_state.nutrition_planner = NutritionPlanner()
 
+# Initialize health checkup analyzer with error handling
+if "health_checkup_analyzer" not in st.session_state:
+    try:
+        st.session_state.health_checkup_analyzer = HealthCheckupAnalyzer()
+    except Exception as e:
+        logger.error(f"Failed to initialize health checkup analyzer: {e}")
+        st.session_state.health_checkup_analyzer = None
+
+# Initialize report parser with error handling
+if "report_parser" not in st.session_state:
+    try:
+        st.session_state.report_parser = ReportParser()
+    except Exception as e:
+        logger.error(f"Failed to initialize report parser: {e}")
+        st.session_state.report_parser = None
+
 
 # ─── Video Processor for WebRTC ──────────────────────────────
 class PatientMonitorProcessor(VideoProcessorBase):
@@ -719,11 +735,11 @@ elif mode == "Health Checkup":
         )
         
         health_analyzer = st.session_state.health_checkup_analyzer
-    
-    # Input method selection
-    input_method = st.radio("Input Method", ["Manual Entry", "Upload Report (Text)"])
-    
-    if input_method == "Manual Entry":
+        
+        # Input method selection
+        input_method = st.radio("Input Method", ["Manual Entry", "Upload Report (Text)"])
+        
+        if input_method == "Manual Entry":
         st.subheader("📝 Manual Entry")
         
         # Blood test parameters
@@ -855,17 +871,19 @@ elif mode == "Agent Dashboard":
         # System metrics
         st.subheader("💻 System Metrics")
         system_metrics = agent_monitor.get_system_metrics()
-    
-    if "error" not in system_metrics:
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("CPU Usage", f"{system_metrics['cpu']['percent']:.1f}%")
-        with col2:
-            st.metric("Memory Usage", f"{system_metrics['memory']['percent']:.1f}%")
-        with col3:
-            st.metric("Disk Usage", f"{system_metrics['disk']['percent']:.1f}%")
-        with col4:
-            st.metric("Uptime", system_metrics['uptime']['formatted'])
+        
+        if "error" not in system_metrics:
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("CPU Usage", f"{system_metrics['cpu']['percent']:.1f}%")
+            with col2:
+                st.metric("Memory Usage", f"{system_metrics['memory']['percent']:.1f}%")
+            with col3:
+                st.metric("Disk Usage", f"{system_metrics['disk']['percent']:.1f}%")
+            with col4:
+                st.metric("Uptime", system_metrics['uptime']['formatted'])
+        else:
+            st.error("Error retrieving system metrics")
         
         st.divider()
         
