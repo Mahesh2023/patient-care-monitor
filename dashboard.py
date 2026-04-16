@@ -2,6 +2,7 @@
 Patient Care Monitor Dashboard v2
 ==================================
 Simplified dashboard with all Teloscopy features integrated.
+Version: 2.0 - Redesigned from scratch
 """
 
 import streamlit as st
@@ -9,11 +10,17 @@ import sys
 
 # Page config
 st.set_page_config(
-    page_title="Patient Care Monitor",
+    page_title="Patient Care Monitor v2",
     page_icon="🏥",
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# Version marker - verify this is the new dashboard
+st.sidebar.markdown("---")
+st.sidebar.markdown("🆕 **Dashboard v2.0**")
+st.sidebar.markdown("Redesigned from scratch")
+st.sidebar.markdown("---")
 
 # Custom CSS
 st.markdown("""
