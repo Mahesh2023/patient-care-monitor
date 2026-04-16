@@ -7,7 +7,7 @@ Simplified backend to ensure basic functionality works
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from datetime import datetime
 import os
 
@@ -33,7 +33,7 @@ app.add_middleware(
 # Get the current directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Mount static files for CSS and JS
+# Mount static files for CSS and JS at root level
 app.mount("/static", StaticFiles(directory=BASE_DIR), name="static")
 
 # ==================== API ENDPOINTS ====================
@@ -47,6 +47,24 @@ async def root():
             return f.read()
     except FileNotFoundError:
         return "<h1>Index.html not found</h1>"
+
+@app.get("/styles.css")
+async def get_styles():
+    """Serve styles.css"""
+    try:
+        css_path = os.path.join(BASE_DIR, "styles.css")
+        return FileResponse(css_path, media_type="text/css")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="styles.css not found")
+
+@app.get("/app.js")
+async def get_app_js():
+    """Serve app.js"""
+    try:
+        js_path = os.path.join(BASE_DIR, "app.js")
+        return FileResponse(js_path, media_type="application/javascript")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="app.js not found")
 
 @app.post("/api/analyze")
 async def analyze_data(
