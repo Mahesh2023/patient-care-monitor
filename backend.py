@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from datetime import datetime
+import os
 
 app = FastAPI(
     title="Patient Care Monitor API",
@@ -29,8 +30,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Get the current directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Mount static files for CSS and JS
-app.mount("/static", StaticFiles(directory="."), name="static")
+app.mount("/static", StaticFiles(directory=BASE_DIR), name="static")
 
 # ==================== API ENDPOINTS ====================
 
@@ -38,7 +42,8 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 async def root():
     """Serve the main HTML page"""
     try:
-        with open("index.html", "r") as f:
+        html_path = os.path.join(BASE_DIR, "index.html")
+        with open(html_path, "r") as f:
             return f.read()
     except FileNotFoundError:
         return "<h1>Index.html not found</h1>"
@@ -47,7 +52,8 @@ async def root():
 async def get_index():
     """Serve index.html"""
     try:
-        with open("index.html", "r") as f:
+        html_path = os.path.join(BASE_DIR, "index.html")
+        with open(html_path, "r") as f:
             return f.read()
     except FileNotFoundError:
         return "<h1>Index.html not found</h1>"
@@ -56,7 +62,8 @@ async def get_index():
 async def get_styles():
     """Serve styles.css"""
     try:
-        return FileResponse("styles.css", media_type="text/css")
+        css_path = os.path.join(BASE_DIR, "styles.css")
+        return FileResponse(css_path, media_type="text/css")
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="styles.css not found")
 
@@ -64,7 +71,8 @@ async def get_styles():
 async def get_app_js():
     """Serve app.js"""
     try:
-        return FileResponse("app.js", media_type="application/javascript")
+        js_path = os.path.join(BASE_DIR, "app.js")
+        return FileResponse(js_path, media_type="application/javascript")
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="app.js not found")
 
