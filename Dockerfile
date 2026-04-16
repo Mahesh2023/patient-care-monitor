@@ -26,6 +26,9 @@ COPY . .
 # Create data directories
 RUN mkdir -p data/session_logs
 
+# Version marker - force rebuild
+# Dashboard v2.0 - Redesigned from scratch
+
 # Render.com sets PORT env var; default to 7860 for Gradio
 ENV PORT=7860
 EXPOSE ${PORT}
