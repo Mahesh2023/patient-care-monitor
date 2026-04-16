@@ -24,8 +24,17 @@ app.add_middleware(
 # Get the current directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Mount static files at root level to serve CSS, JS, and other assets
-app.mount("/", StaticFiles(directory=BASE_DIR, html=True), name="static")
+# Mount static files at /static path
+app.mount("/static", StaticFiles(directory=BASE_DIR), name="static")
+
+# Serve index.html at root
+@app.get("/", response_class=HTMLResponse)
+async def root():
+    try:
+        with open(os.path.join(BASE_DIR, "index.html"), "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "<h1>index.html not found</h1>"
 
 # API endpoints
 @app.get("/api/health")
