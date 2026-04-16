@@ -1,25 +1,16 @@
 """
 Patient Care Monitor Backend - FastAPI Server
 ============================================
-Simplified backend to ensure basic functionality works
+Minimal backend to serve static files correctly
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
-from datetime import datetime
+from fastapi.responses import HTMLResponse
 import os
 
-app = FastAPI(
-    title="Patient Care Monitor API",
-    description="Healthcare platform",
-    version="3.0"
-)
-
-print("=" * 50)
-print("Patient Care Monitor API Starting...")
-print("=" * 50)
+app = FastAPI(title="Patient Care Monitor")
 
 # CORS middleware
 app.add_middleware(
@@ -33,55 +24,17 @@ app.add_middleware(
 # Get the current directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-print(f"BASE_DIR: {BASE_DIR}")
-print(f"Current working directory: {os.getcwd()}")
-print(f"Files in BASE_DIR: {os.listdir(BASE_DIR) if os.path.exists(BASE_DIR) else 'DIR NOT FOUND'}")
+# Mount static files at root level to serve CSS, JS, and other assets
+app.mount("/", StaticFiles(directory=BASE_DIR, html=True), name="static")
 
-# Check if static files exist
-css_path = os.path.join(BASE_DIR, "styles.css")
-js_path = os.path.join(BASE_DIR, "app.js")
-html_path = os.path.join(BASE_DIR, "index.html")
+# API endpoints
+@app.get("/api/health")
+async def health_check():
+    return {"status": "healthy"}
 
-print(f"CSS exists: {os.path.exists(css_path)} at {css_path}")
-print(f"JS exists: {os.path.exists(js_path)} at {js_path}")
-print(f"HTML exists: {os.path.exists(html_path)} at {html_path}")
-
-# Mount static files for CSS and JS at root level
-app.mount("/static", StaticFiles(directory=BASE_DIR), name="static")
-
-# ==================== API ENDPOINTS ====================
-
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    """Serve the main HTML page"""
-    try:
-        html_path = os.path.join(BASE_DIR, "index.html")
-        with open(html_path, "r") as f:
-            return f.read()
-    except FileNotFoundError:
-        return "<h1>Index.html not found</h1>"
-
-@app.get("/styles.css")
-async def get_styles():
-    """Serve styles.css"""
-    try:
-        css_path = os.path.join(BASE_DIR, "styles.css")
-        print(f"Serving CSS from: {css_path}, exists: {os.path.exists(css_path)}")
-        return FileResponse(css_path, media_type="text/css")
-    except FileNotFoundError:
-        print(f"CSS not found at {css_path}")
-        raise HTTPException(status_code=404, detail=f"styles.css not found at {css_path}")
-
-@app.get("/app.js")
-async def get_app_js():
-    """Serve app.js"""
-    try:
-        js_path = os.path.join(BASE_DIR, "app.js")
-        print(f"Serving JS from: {js_path}, exists: {os.path.exists(js_path)}")
-        return FileResponse(js_path, media_type="application/javascript")
-    except FileNotFoundError:
-        print(f"JS not found at {js_path}")
-        raise HTTPException(status_code=404, detail=f"app.js not found at {js_path}")
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 @app.post("/api/analyze")
 async def analyze_data(
