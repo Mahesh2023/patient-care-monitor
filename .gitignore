@@ -21,6 +21,14 @@ Thumbs.db
 # Session logs (generated at runtime)
 data/session_logs/*.jsonl
 
+# Logs
+data/logs/*.log
+
+# Pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
 # Distribution
 dist/
 build/

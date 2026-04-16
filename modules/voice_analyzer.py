@@ -17,6 +17,7 @@ Limitations:
 - This module uses simple signal processing, not deep learning, for transparency.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 from enum import Enum
@@ -24,6 +25,8 @@ import struct
 
 import numpy as np
 from scipy import signal
+
+logger = logging.getLogger(__name__)
 
 
 class VocalState(Enum):
@@ -210,75 +213,83 @@ class VoiceAnalyzer:
         Returns:
             VoiceAnalysisResult
         """
-        if len(audio) < self.sample_rate * 0.1:  # Less than 100ms
-            return VoiceAnalysisResult(timestamp=timestamp, vocal_state=VocalState.SILENT)
+        try:
+            if len(audio) < self.sample_rate * 0.1:  # Less than 100ms
+                return VoiceAnalysisResult(timestamp=timestamp, vocal_state=VocalState.SILENT)
 
-        # Normalize
-        audio = audio.astype(np.float32)
-        max_val = np.max(np.abs(audio))
-        if max_val > 0:
-            audio = audio / max_val
+            # Normalize
+            audio = audio.astype(np.float32)
+            max_val = np.max(np.abs(audio))
+            if max_val > 0:
+                audio = audio / max_val
 
-        # Extract features
-        pitch_mean, pitch_std = self._compute_pitch_autocorrelation(audio)
-        energy_mean, energy_std = self._compute_energy(audio)
-        spectral_centroid = self._compute_spectral_centroid(audio)
-        zcr = self._compute_zero_crossing_rate(audio)
-        is_voiced = pitch_mean > 50 and energy_mean > 0.005
+            # Extract features
+            pitch_mean, pitch_std = self._compute_pitch_autocorrelation(audio)
+            energy_mean, energy_std = self._compute_energy(audio)
+            spectral_centroid = self._compute_spectral_centroid(audio)
+            zcr = self._compute_zero_crossing_rate(audio)
+            is_voiced = pitch_mean > 50 and energy_mean > 0.005
 
-        features = VoiceFeatures(
-            pitch_mean=round(pitch_mean, 1),
-            pitch_std=round(pitch_std, 1),
-            energy_mean=round(energy_mean, 4),
-            energy_std=round(energy_std, 4),
-            spectral_centroid=round(spectral_centroid, 1),
-            zero_crossing_rate=round(zcr, 4),
-            is_voiced=is_voiced,
-            duration_sec=len(audio) / self.sample_rate,
-        )
+            features = VoiceFeatures(
+                pitch_mean=round(pitch_mean, 1),
+                pitch_std=round(pitch_std, 1),
+                energy_mean=round(energy_mean, 4),
+                energy_std=round(energy_std, 4),
+                spectral_centroid=round(spectral_centroid, 1),
+                zero_crossing_rate=round(zcr, 4),
+                is_voiced=is_voiced,
+                duration_sec=len(audio) / self.sample_rate,
+            )
 
-        state, arousal, valence = self._classify_state(features)
+            state, arousal, valence = self._classify_state(features)
 
-        # Confidence based on signal quality
-        confidence = 0.5
-        if is_voiced and energy_mean > 0.01:
-            confidence = 0.7
-        if is_voiced and energy_mean > 0.05:
-            confidence = 0.85
+            # Confidence based on signal quality
+            confidence = 0.5
+            if is_voiced and energy_mean > 0.01:
+                confidence = 0.7
+            if is_voiced and energy_mean > 0.05:
+                confidence = 0.85
 
-        result = VoiceAnalysisResult(
-            features=features,
-            vocal_state=state,
-            arousal=round(arousal, 2),
-            valence=round(valence, 2),
-            confidence=round(confidence, 2),
-            timestamp=timestamp,
-        )
+            result = VoiceAnalysisResult(
+                features=features,
+                vocal_state=state,
+                arousal=round(arousal, 2),
+                valence=round(valence, 2),
+                confidence=round(confidence, 2),
+                timestamp=timestamp,
+            )
 
-        self._history.append(result)
-        if len(self._history) > self._max_history:
-            self._history = self._history[-self._max_history:]
+            self._history.append(result)
+            if len(self._history) > self._max_history:
+                self._history = self._history[-self._max_history:]
 
-        return result
+            return result
+        except Exception as e:
+            logger.error(f"Error analyzing audio: {e}")
+            return VoiceAnalysisResult(timestamp=timestamp, vocal_state=VocalState.UNKNOWN)
 
     def get_recent_trend(self, n: int = 10) -> dict:
         """Get arousal/valence trend over recent analyses."""
-        recent = self._history[-n:]
-        if len(recent) < 2:
-            return {"arousal_trend": "unknown", "valence_trend": "unknown"}
+        try:
+            recent = self._history[-n:]
+            if len(recent) < 2:
+                return {"arousal_trend": "unknown", "valence_trend": "unknown"}
 
-        arousals = [r.arousal for r in recent]
-        valences = [r.valence for r in recent]
+            arousals = [r.arousal for r in recent]
+            valences = [r.valence for r in recent]
 
-        a_diff = arousals[-1] - arousals[0]
-        v_diff = valences[-1] - valences[0]
+            a_diff = arousals[-1] - arousals[0]
+            v_diff = valences[-1] - valences[0]
 
-        return {
-            "arousal_trend": "increasing" if a_diff > 0.1 else ("decreasing" if a_diff < -0.1 else "stable"),
-            "valence_trend": "improving" if v_diff > 0.1 else ("declining" if v_diff < -0.1 else "stable"),
-            "mean_arousal": round(np.mean(arousals), 2),
-            "mean_valence": round(np.mean(valences), 2),
-        }
+            return {
+                "arousal_trend": "increasing" if a_diff > 0.1 else ("decreasing" if a_diff < -0.1 else "stable"),
+                "valence_trend": "improving" if v_diff > 0.1 else ("declining" if v_diff < -0.1 else "stable"),
+                "mean_arousal": round(np.mean(arousals), 2),
+                "mean_valence": round(np.mean(valences), 2),
+            }
+        except Exception as e:
+            logger.error(f"Error computing voice trend: {e}")
+            return {"arousal_trend": "error", "valence_trend": "error"}
 
     def reset(self):
         self._history.clear()

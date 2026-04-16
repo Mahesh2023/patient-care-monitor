@@ -24,12 +24,15 @@ Limitations:
 - Dark skin tones may have lower signal-to-noise ratio
 """
 
+import logging
 from collections import deque
 from dataclasses import dataclass
 from typing import Optional, List
 
 import numpy as np
 from scipy import signal as scipy_signal
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -81,15 +84,18 @@ class RPPGEstimator:
             forehead_roi: BGR image of the forehead region
             timestamp: Frame timestamp in seconds
         """
-        if forehead_roi is None or forehead_roi.size == 0:
-            return
+        try:
+            if forehead_roi is None or forehead_roi.size == 0:
+                return
 
-        # Compute mean color values across the ROI
-        mean_bgr = np.mean(forehead_roi.reshape(-1, 3), axis=0)
-        self._blue_signal.append(mean_bgr[0])
-        self._green_signal.append(mean_bgr[1])
-        self._red_signal.append(mean_bgr[2])
-        self._timestamps.append(timestamp)
+            # Compute mean color values across the ROI
+            mean_bgr = np.mean(forehead_roi.reshape(-1, 3), axis=0)
+            self._blue_signal.append(mean_bgr[0])
+            self._green_signal.append(mean_bgr[1])
+            self._red_signal.append(mean_bgr[2])
+            self._timestamps.append(timestamp)
+        except Exception as e:
+            logger.warning(f"Error adding frame to rPPG buffer: {e}")
 
     def estimate_heart_rate(self, timestamp: float = 0.0) -> HeartRateResult:
         """
@@ -194,31 +200,35 @@ class RPPGEstimator:
 
     def get_hr_trend(self) -> dict:
         """Get heart rate trend."""
-        if len(self._hr_history) < 3:
-            return {"trend": "insufficient_data", "mean_bpm": 0.0, "std_bpm": 0.0}
+        try:
+            if len(self._hr_history) < 3:
+                return {"trend": "insufficient_data", "mean_bpm": 0.0, "std_bpm": 0.0}
 
-        recent = self._hr_history[-5:]
-        mean_bpm = float(np.mean(recent))
-        std_bpm = float(np.std(recent))
+            recent = self._hr_history[-5:]
+            mean_bpm = float(np.mean(recent))
+            std_bpm = float(np.std(recent))
 
-        if len(self._hr_history) >= 10:
-            older = self._hr_history[-10:-5]
-            diff = np.mean(recent) - np.mean(older)
-            if diff > 5:
-                trend = "increasing"
-            elif diff < -5:
-                trend = "decreasing"
+            if len(self._hr_history) >= 10:
+                older = self._hr_history[-10:-5]
+                diff = np.mean(recent) - np.mean(older)
+                if diff > 5:
+                    trend = "increasing"
+                elif diff < -5:
+                    trend = "decreasing"
+                else:
+                    trend = "stable"
             else:
                 trend = "stable"
-        else:
-            trend = "stable"
 
-        return {
-            "trend": trend,
-            "mean_bpm": round(mean_bpm, 1),
-            "std_bpm": round(std_bpm, 1),
-            "latest_bpm": round(self._hr_history[-1], 1),
-        }
+            return {
+                "trend": trend,
+                "mean_bpm": round(mean_bpm, 1),
+                "std_bpm": round(std_bpm, 1),
+                "latest_bpm": round(self._hr_history[-1], 1),
+            }
+        except Exception as e:
+            logger.error(f"Error computing HR trend: {e}")
+            return {"trend": "error", "mean_bpm": 0.0, "std_bpm": 0.0}
 
     def reset(self):
         self._green_signal.clear()

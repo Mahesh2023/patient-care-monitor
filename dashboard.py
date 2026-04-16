@@ -35,6 +35,11 @@ from modules.face_analyzer import FaceAnalyzer, FaceAnalysisResult
 from modules.pain_detector import PainDetector, PainLevel
 from modules.fusion_engine import FusionEngine, PatientAlertLevel
 from modules.text_sentiment import TextSentimentAnalyzer
+from modules.trauma_support import TraumaSupport
+from modules.nutrition_planner import NutritionPlanner
+from modules.health_checkup import HealthCheckupAnalyzer
+from modules.report_parser import ReportParser
+from modules.agent_monitor import agent_monitor, AgentStatus
 from utils.session_logger import SessionLogger
 
 
@@ -100,6 +105,10 @@ if "demo_states" not in st.session_state:
     st.session_state.demo_states = []
 if "notes_history" not in st.session_state:
     st.session_state.notes_history = []
+if "trauma_support" not in st.session_state:
+    st.session_state.trauma_support = TraumaSupport()
+if "nutrition_planner" not in st.session_state:
+    st.session_state.nutrition_planner = NutritionPlanner()
 
 
 # ─── Video Processor for WebRTC ──────────────────────────────
@@ -239,7 +248,7 @@ with st.sidebar:
     st.divider()
 
     # Mode selector
-    mode = st.radio("Mode", ["Dashboard", "Session Review", "Text Analysis", "Research", "About"])
+    mode = st.radio("Mode", ["Dashboard", "Trauma Support", "Nutrition Planner", "Health Checkup", "Agent Dashboard", "Session Review", "Text Analysis", "Research", "About"])
 
     st.divider()
 
@@ -403,6 +412,484 @@ if mode == "Dashboard":
                 st.line_chart(hr_data.set_index("timestamp"), use_container_width=True)
                 st.caption("Estimated heart rate (rPPG) - for monitoring trends only")
 
+
+# ─── Trauma Support Mode ─────────────────────────────────────
+elif mode == "Trauma Support":
+    st.header(" Trauma First Aid & Crisis Support")
+    
+    st.markdown(
+        '<div class="disclaimer-box">'
+        'If you or someone you know is in immediate danger, call emergency services (911) '
+        'or the suicide prevention hotline (988) immediately. '
+        'These tools are for managing acute distress and are not a substitute for professional care.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    
+    trauma_support = st.session_state.trauma_support
+    
+    # Emergency contacts
+    st.subheader("")
+    contacts = trauma_support.get_emergency_contacts()
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Emergency Services", contacts.get("emergency_services", "911"))
+    with col2:
+        st.metric("Suicide Prevention", contacts.get("suicide_prevention_hotline", "988"))
+    with col3:
+        st.metric("Poison Control", contacts.get("poison_control", "1-800-222-1222"))
+    
+    st.divider()
+    
+    # Grounding exercise
+    st.subheader(" 5-4-3-2-1 Sensory Grounding")
+    grounding = trauma_support.get_grounding_exercise()
+    
+    st.markdown(f"**{grounding['name']}**")
+    st.caption(grounding['description'])
+    
+    with st.expander("How to do it", expanded=True):
+        for i, (num, description) in enumerate(grounding['steps'].items(), 1):
+            st.markdown(f"{num}. {description}")
+    
+    if st.button("Start Grounding Exercise"):
+        with st.spinner("Guiding you through the exercise..."):
+            for num, description in grounding['steps'].items():
+                st.info(f"**{num}:** {description}")
+                import time
+                time.sleep(3)
+            st.success("Grounding exercise complete!")
+    
+    st.divider()
+    
+    # Breathing exercises
+    st.subheader(" Breathing Exercises")
+    breathing_pattern = st.selectbox(
+        "Select breathing pattern",
+        ["box_breathing", "4-7-8", "equal_breathing"],
+        format_func=lambda x: x.replace("_", " ").title()
+    )
+    
+    breathing = trauma_support.get_breathing_exercise(breathing_pattern)
+    
+    st.markdown(f"**{breathing['name']}**")
+    st.caption(f"Duration: {breathing['total_duration_minutes']:.1f} minutes")
+    
+    pattern_data = breathing['pattern']
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Inhale", f"{pattern_data['inhale']}s")
+    with col2:
+        st.metric("Hold", f"{pattern_data['hold']}s")
+    with col3:
+        st.metric("Exhale", f"{pattern_data['exhale']}s")
+    with col4:
+        if pattern_data['hold_empty'] > 0:
+            st.metric("Hold Empty", f"{pattern_data['hold_empty']}s")
+    
+    with st.expander("Instructions", expanded=True):
+        for instruction in breathing['instructions']:
+            st.markdown(f"- {instruction}")
+    
+    if st.button("Start Breathing Exercise"):
+        with st.spinner("Guiding your breathing..."):
+            for i in range(breathing['cycles']):
+                st.info(f"Cycle {i+1}/{breathing['cycles']}")
+                st.markdown(f"Inhale for {pattern_data['inhale']} seconds...")
+                time.sleep(pattern_data['inhale'])
+                if pattern_data['hold'] > 0:
+                    st.markdown(f"Hold for {pattern_data['hold']} seconds...")
+                    time.sleep(pattern_data['hold'])
+                st.markdown(f"Exhale for {pattern_data['exhale']} seconds...")
+                time.sleep(pattern_data['exhale'])
+                if pattern_data['hold_empty'] > 0:
+                    st.markdown(f"Hold empty for {pattern_data['hold_empty']} seconds...")
+                    time.sleep(pattern_data['hold_empty'])
+            st.success("Breathing exercise complete!")
+    
+    st.divider()
+    
+    # Calming message
+    st.subheader(" Calming Message")
+    if st.button("Get a calming message"):
+        message = trauma_support.get_random_calming_message()
+        st.success(message)
+    
+    st.divider()
+    
+    # Crisis resources
+    st.subheader(" Crisis Resources")
+    resources = trauma_support.get_crisis_resources()
+    
+    with st.expander("Hotlines", expanded=True):
+        for name, info in resources['hotlines'].items():
+            st.markdown(f"**{info['name']}**")
+            st.markdown(f"- Number: {info['number']}")
+            st.markdown(f"- Available: {info['available']}")
+            st.markdown(f"- {info['description']}")
+            st.markdown("---")
+    
+    with st.expander("Online Resources"):
+        for resource in resources['online_resources']:
+            st.markdown(f"**{resource['name']}**")
+            st.markdown(f"- {resource['description']}")
+            st.markdown(f"- [Visit]({resource['url']})")
+            st.markdown("---")
+    
+    st.warning(resources['disclaimer'])
+
+# ─── Nutrition Planner Mode ─────────────────────────────────
+elif mode == "Nutrition Planner":
+    st.header(" Personalized Nutrition Planner")
+    
+    st.markdown(
+        '<div class="disclaimer-box">'
+        'This nutrition planner provides personalized meal recommendations based on your profile. '
+        'Consult a healthcare professional or registered dietitian before making significant dietary changes.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    
+    nutrition_planner = st.session_state.nutrition_planner
+    
+    # User profile input
+    st.subheader("")
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        gender = st.selectbox("Gender", ["male", "female"])
+        age = st.slider("Age", 18, 100, 30)
+    with col2:
+        activity_level = st.selectbox("Activity Level", ["sedentary", "moderate", "active"])
+        goal = st.selectbox("Goal", ["maintain", "lose", "gain"])
+    with col3:
+        weight_kg = st.number_input("Weight (kg)", min_value=30, max_value=200, value=70)
+        height_cm = st.number_input("Height (cm)", min_value=100, max_value=250, value=170)
+    
+    st.divider()
+    
+    # Dietary restrictions
+    st.subheader(" Dietary Restrictions")
+    restrictions = st.multiselect(
+        "Select any dietary restrictions",
+        ["vegetarian", "vegan", "gluten_free", "dairy_free", "low_sodium"],
+        []
+    )
+    
+    region = st.selectbox("Regional Preference", ["global", "asian", "mediterranean", "american", "indian"])
+    
+    st.divider()
+    
+    # Generate meal plan
+    days = st.slider("Number of days", 7, 30, 30)
+    
+    if st.button("Generate Meal Plan", type="primary"):
+        profile = {
+            "gender": gender,
+            "age": age,
+            "activity_level": activity_level,
+            "goal": goal,
+            "weight_kg": weight_kg,
+            "height_cm": height_cm,
+            "restrictions": restrictions,
+            "region": region
+        }
+        
+        with st.spinner("Generating personalized meal plan..."):
+            meal_plan = nutrition_planner.generate_meal_plan(profile, days, region)
+            
+            if "error" in meal_plan:
+                st.error(meal_plan["error"])
+            else:
+                st.session_state.current_meal_plan = meal_plan
+                st.success(f"Generated {days}-day meal plan!")
+    
+    # Display meal plan
+    if "current_meal_plan" in st.session_state:
+        meal_plan = st.session_state.current_meal_plan
+        
+        st.subheader(" Meal Plan Summary")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Daily Calorie Target", f"{meal_plan['calorie_target']} kcal")
+        with col2:
+            st.metric("Plan Duration", f"{meal_plan['days']} days")
+        
+        st.divider()
+        
+        # Nutritional summary
+        summary = nutrition_planner.get_nutritional_summary(meal_plan)
+        
+        if "error" not in summary:
+            st.subheader(" Nutritional Summary (Daily Averages)")
+            
+            col1, col2, col3, col4 = st.columns(4)
+            with col1:
+                st.metric("Calories", f"{summary['daily_averages']['calories']:.0f} kcal")
+            with col2:
+                st.metric("Protein", f"{summary['daily_averages']['protein']:.0f}g")
+            with col3:
+                st.metric("Carbs", f"{summary['daily_averages']['carbs']:.0f}g")
+            with col4:
+                st.metric("Fat", f"{summary['daily_averages']['fat']:.0f}g")
+            
+            st.divider()
+            
+            # Macronutrient ratios
+            st.subheader(" Macronutrient Ratios")
+            ratios = summary['macronutrient_ratios']
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("Protein", f"{ratios['protein']*100:.1f}%")
+            with col2:
+                st.metric("Carbs", f"{ratios['carbs']*100:.1f}%")
+            with col3:
+                st.metric("Fat", f"{ratios['fat']*100:.1f}%")
+        
+        st.divider()
+        
+        # Daily meal plans
+        st.subheader(" Daily Meal Plans")
+        
+        # Show first 7 days
+        for day_plan in meal_plan['meal_plan'][:7]:
+            with st.expander(f"Day {day_plan['day']} - {day_plan['date']}", expanded=False):
+                st.write(f"**Target Calories:** {day_plan['target_calories']} kcal")
+                st.write(f"**Total Calories:** {day_plan['total_calories']} kcal")
+                st.write(f"**Variance:** {day_plan['calorie_variance']:+d} kcal")
+                
+                st.markdown("---")
+                
+                for meal_type, meal in day_plan['meals'].items():
+                    st.markdown(f"**{meal_type.title()}:** {meal['name']}")
+                    st.caption(f"{meal['calories']} kcal | P: {meal['protein']}g | C: {meal['carbs']}g | F: {meal['fat']}g")
+        
+        if len(meal_plan['meal_plan']) > 7:
+            st.info(f"Showing 7 of {len(meal_plan['meal_plan'])} days. Expand to see more.")
+
+# ─── Health Checkup Mode ─────────────────────────────────────
+elif mode == "Health Checkup":
+    st.header("🩺 Health Checkup Analysis")
+    
+    st.markdown(
+        '<div class="disclaimer-box">'
+        'Upload blood test, urine test, or abdomen scan reports for automated analysis. '
+        'This tool provides health scoring, condition detection, and dietary recommendations. '
+        'Consult a healthcare professional for medical advice.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    
+    health_analyzer = st.session_state.health_checkup_analyzer
+    
+    # Input method selection
+    input_method = st.radio("Input Method", ["Manual Entry", "Upload Report (Text)"])
+    
+    if input_method == "Manual Entry":
+        st.subheader("📝 Manual Entry")
+        
+        # Blood test parameters
+        with st.expander("Blood Test Parameters", expanded=True):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                hemoglobin = st.number_input("Hemoglobin (g/dL)", min_value=5.0, max_value=20.0, value=14.0, step=0.1)
+                rbc = st.number_input("RBC (million/µL)", min_value=2.0, max_value=7.0, value=4.5, step=0.1)
+                wbc = st.number_input("WBC (thousand/µL)", min_value=1.0, max_value=20.0, value=7.0, step=0.1)
+            with col2:
+                glucose_fasting = st.number_input("Fasting Glucose (mg/dL)", min_value=50, max_value=400, value=90)
+                hba1c = st.number_input("HbA1c (%)", min_value=3.0, max_value=15.0, value=5.0, step=0.1)
+                cholesterol_total = st.number_input("Total Cholesterol (mg/dL)", min_value=100, max_value=400, value=180)
+            with col3:
+                cholesterol_ldl = st.number_input("LDL Cholesterol (mg/dL)", min_value=50, max_value=250, value=100)
+                cholesterol_hdl = st.number_input("HDL Cholesterol (mg/dL)", min_value=20, max_value=100, value=50)
+                triglycerides = st.number_input("Triglycerides (mg/dL)", min_value=50, max_value=500, value=150)
+        
+        # Urine test parameters
+        with st.expander("Urine Test Parameters"):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                urine_ph = st.number_input("pH", min_value=4.0, max_value=9.0, value=6.0, step=0.1)
+                urine_protein = st.number_input("Protein (mg/dL)", min_value=0, max_value=500, value=0)
+                urine_glucose = st.number_input("Glucose (mg/dL)", min_value=0, max_value=500, value=0)
+            with col2:
+                urine_ketones = st.number_input("Ketones (mg/dL)", min_value=0, max_value=500, value=0)
+                urine_bilirubin = st.number_input("Bilirubin (mg/dL)", min_value=0, max_value=5, value=0)
+                urine_nitrite = st.selectbox("Nitrite", [0, 1], format_func=lambda x: "Negative" if x == 0 else "Positive")
+            with col3:
+                urine_leukocytes = st.number_input("Leukocytes (/HPF)", min_value=0, max_value=50, value=0)
+                urine_rbc = st.number_input("RBC (/HPF)", min_value=0, max_value=20, value=0)
+        
+        # Gender for gender-specific ranges
+        gender = st.selectbox("Gender", ["male", "female"])
+        
+        if st.button("Analyze Health Checkup", type="primary"):
+            blood_data = {
+                "hemoglobin": hemoglobin,
+                "rbc": rbc,
+                "wbc": wbc,
+                "glucose_fasting": glucose_fasting,
+                "hba1c": hba1c,
+                "cholesterol_total": cholesterol_total,
+                "cholesterol_ldl": cholesterol_ldl,
+                "cholesterol_hdl": cholesterol_hdl,
+                "triglycerides": triglycerides
+            }
+            
+            urine_data = {
+                "ph": urine_ph,
+                "protein": urine_protein,
+                "glucose": urine_glucose,
+                "ketones": urine_ketones,
+                "bilirubin": urine_bilirubin,
+                "nitrite": urine_nitrite,
+                "leukocytes": urine_leukocytes,
+                "rbc": urine_rbc
+            }
+            
+            with st.spinner("Analyzing health checkup..."):
+                results = health_analyzer.full_analysis(blood_data, urine_data, gender=gender)
+                st.session_state.health_checkup_results = results
+    
+    else:
+        st.subheader("📄 Upload Report")
+        report_text = st.text_area("Paste report text here", height=200)
+        
+        if st.button("Parse Report", type="primary"):
+            with st.spinner("Parsing report..."):
+                parsed = st.session_state.report_parser.parse_report(report_text)
+                st.session_state.parsed_report = parsed
+    
+    # Display results
+    if "health_checkup_results" in st.session_state:
+        results = st.session_state.health_checkup_results
+        
+        st.divider()
+        st.subheader("📊 Analysis Results")
+        
+        # Health score
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Health Score", f"{results['health_score']}/100")
+        with col2:
+            st.metric("Health Status", results['health_status'].upper())
+        
+        # Detected conditions
+        if results['detected_conditions']:
+            st.subheader("⚠️ Detected Conditions")
+            for condition in results['detected_conditions']:
+                severity_color = "red" if condition['severity'] == "critical" else "orange" if condition['severity'] == "high" else "yellow" if condition['severity'] == "moderate" else "green"
+                st.markdown(f"**{condition['name']}** ({condition['severity'].upper()})")
+                for rec in condition['recommendations']:
+                    st.markdown(f"- {rec}")
+                st.markdown("---")
+        else:
+            st.success("No significant conditions detected")
+        
+        # Dietary recommendations
+        if results['dietary_recommendations']:
+            st.subheader("🥗 Dietary Recommendations")
+            for rec in results['dietary_recommendations']:
+                st.markdown(f"- {rec}")
+    
+    # Display parsed report
+    if "parsed_report" in st.session_state:
+        parsed = st.session_state.parsed_report
+        st.divider()
+        st.subheader("📋 Parsed Report")
+        st.json(parsed)
+
+# ─── Agent Dashboard Mode ───────────────────────────────────
+elif mode == "Agent Dashboard":
+    st.header("🤖 Agent Dashboard")
+    
+    st.markdown(
+        '<div class="disclaimer-box">'
+        'Real-time monitoring of analysis agents and system metrics. '
+        'Track agent status, performance, and system resources.'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    
+    # System metrics
+    st.subheader("💻 System Metrics")
+    system_metrics = agent_monitor.get_system_metrics()
+    
+    if "error" not in system_metrics:
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("CPU Usage", f"{system_metrics['cpu']['percent']:.1f}%")
+        with col2:
+            st.metric("Memory Usage", f"{system_metrics['memory']['percent']:.1f}%")
+        with col3:
+            st.metric("Disk Usage", f"{system_metrics['disk']['percent']:.1f}%")
+        with col4:
+            st.metric("Uptime", system_metrics['uptime']['formatted'])
+        
+        st.divider()
+        
+        # Detailed metrics
+        with st.expander("Detailed System Metrics", expanded=False):
+            st.json(system_metrics)
+    else:
+        st.error("Error retrieving system metrics")
+    
+    # Summary stats
+    st.subheader("📈 Summary Statistics")
+    summary_stats = agent_monitor.get_summary_stats()
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Agents", summary_stats['agents']['total'])
+        st.metric("Active Agents", summary_stats['agents']['active'])
+    with col2:
+        st.metric("Total Tasks", summary_stats['tasks']['total'])
+        st.metric("Success Rate", f"{summary_stats['tasks']['success_rate']:.1f}%")
+    with col3:
+        st.metric("Activity Log Entries", summary_stats['activity_log_entries'])
+        st.metric("Analysis History", summary_stats['analysis_history_entries'])
+    
+    st.divider()
+    
+    # Agent statuses
+    st.subheader("🔧 Agent Statuses")
+    agent_statuses = agent_monitor.get_all_agent_statuses()
+    
+    if agent_statuses:
+        for agent_id, agent_data in agent_statuses.items():
+            with st.expander(f"{agent_data['name']} ({agent_id})", expanded=False):
+                st.write(f"**Type:** {agent_data['type']}")
+                st.write(f"**Status:** {agent_data['status'].upper()}")
+                st.write(f"**Tasks Completed:** {agent_data['tasks_completed']}")
+                st.write(f"**Tasks Failed:** {agent_data['tasks_failed']}")
+                st.write(f"**Avg Processing Time:** {agent_data['average_processing_time']:.3f}s")
+                st.write(f"**Last Activity:** {agent_data['last_activity']}")
+                st.write(f"**Registered:** {agent_data['registered_at']}")
+    else:
+        st.info("No agents registered yet")
+    
+    # Activity log
+    st.subheader("📝 Activity Log")
+    activity_log = agent_monitor.get_activity_log(limit=20)
+    
+    if activity_log:
+        for entry in reversed(activity_log):
+            st.text(f"{entry['timestamp']} - {entry['agent_id']}: {entry['message']}")
+    else:
+        st.info("No activity log entries")
+    
+    # Register test agent
+    st.divider()
+    st.subheader("➕ Register Test Agent")
+    with st.form("register_agent"):
+        agent_id = st.text_input("Agent ID", "test_agent_1")
+        agent_name = st.text_input("Agent Name", "Test Analyzer")
+        agent_type = st.selectbox("Agent Type", ["face_analyzer", "pain_detector", "voice_analyzer"])
+        
+        if st.form_submit_button("Register Agent"):
+            agent_monitor.register_agent(agent_id, agent_name, agent_type)
+            st.success(f"Registered agent: {agent_name}")
 
 # ─── Session Review Mode ─────────────────────────────────────
 elif mode == "Session Review":

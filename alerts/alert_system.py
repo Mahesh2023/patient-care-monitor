@@ -7,12 +7,15 @@ Manages caregiver alerts with cooldown, escalation, and logging.
 import json
 import os
 import time
+import logging
 from collections import deque
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import List, Optional
 
 from modules.fusion_engine import PatientState, PatientAlertLevel
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -52,7 +55,10 @@ class AlertSystem:
         self._alert_counter: int = 0
 
         # Ensure log directory exists
-        os.makedirs(log_dir, exist_ok=True)
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+        except OSError as e:
+            logger.error(f"Failed to create alert log directory {log_dir}: {e}")
 
         # Active alert callback (set by dashboard)
         self.on_alert = None
@@ -117,8 +123,10 @@ class AlertSystem:
             log_file = os.path.join(self.log_dir, f"alerts_{date_str}.jsonl")
             with open(log_file, "a") as f:
                 f.write(json.dumps(alert.to_dict()) + "\n")
-        except Exception:
-            pass
+        except (IOError, OSError) as e:
+            logger.error(f"Failed to write alert to log file {log_file}: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error logging alert: {e}")
 
     def acknowledge_alert(self, alert_id: str) -> bool:
         """Mark an alert as acknowledged by caregiver."""

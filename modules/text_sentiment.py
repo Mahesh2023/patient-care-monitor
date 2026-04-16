@@ -12,9 +12,12 @@ This is intentionally rule-based rather than ML-based to maintain:
 For production use, consider integrating a local LLM or BERT model.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 import re
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -130,11 +133,17 @@ class TextSentimentAnalyzer:
 
         # Compute final valence
         if scores:
-            raw_valence = np.clip(np.mean(scores), -1, 1)
-            valence = (raw_valence + 1) / 2.0  # Map [-1,1] to [0,1]
-            # Arousal from absolute values
-            arousal = np.clip(np.mean([abs(s) for s in scores]), 0, 1)
-            confidence = min(0.9, 0.3 + len(scores) * 0.1)
+            try:
+                raw_valence = np.clip(np.mean(scores), -1, 1)
+                valence = (raw_valence + 1) / 2.0  # Map [-1,1] to [0,1]
+                # Arousal from absolute values
+                arousal = np.clip(np.mean([abs(s) for s in scores]), 0, 1)
+                confidence = min(0.9, 0.3 + len(scores) * 0.1)
+            except Exception as e:
+                logger.error(f"Error computing sentiment scores: {e}")
+                valence = 0.5
+                arousal = 0.3
+                confidence = 0.1
         else:
             valence = 0.5
             arousal = 0.3
@@ -156,17 +165,21 @@ class TextSentimentAnalyzer:
 
     def get_recent_summary(self, n: int = 5) -> dict:
         """Summarize recent text analyses."""
-        recent = self._history[-n:]
-        if not recent:
-            return {"status": "no_data"}
+        try:
+            recent = self._history[-n:]
+            if not recent:
+                return {"status": "no_data"}
 
-        return {
-            "mean_valence": round(float(np.mean([r.valence for r in recent])), 2),
-            "mean_arousal": round(float(np.mean([r.arousal for r in recent])), 2),
-            "pain_mentioned_count": sum(1 for r in recent if r.pain_mentioned),
-            "distress_mentioned_count": sum(1 for r in recent if r.distress_mentioned),
-            "total_entries": len(recent),
-        }
+            return {
+                "mean_valence": round(float(np.mean([r.valence for r in recent])), 2),
+                "mean_arousal": round(float(np.mean([r.arousal for r in recent])), 2),
+                "pain_mentioned_count": sum(1 for r in recent if r.pain_mentioned),
+                "distress_mentioned_count": sum(1 for r in recent if r.distress_mentioned),
+                "total_entries": len(recent),
+            }
+        except Exception as e:
+            logger.error(f"Error computing sentiment summary: {e}")
+            return {"status": "error", "message": str(e)}
 
     def reset(self):
         self._history.clear()

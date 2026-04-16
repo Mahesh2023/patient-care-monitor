@@ -21,6 +21,7 @@ Limitations:
 - Must be used as supplement to, not replacement for, clinical assessment
 """
 
+import logging
 from dataclasses import dataclass
 from typing import List, Optional
 from enum import Enum
@@ -28,6 +29,8 @@ from enum import Enum
 import numpy as np
 
 from modules.face_analyzer import AUEstimates
+
+logger = logging.getLogger(__name__)
 
 
 class PainLevel(Enum):
@@ -99,61 +102,69 @@ class PainDetector:
         Perform pain assessment from Action Unit estimates.
         Uses temporal smoothing over a sliding window.
         """
-        if aus is None:
+        try:
+            if aus is None:
+                return PainAssessment(timestamp=timestamp)
+
+            raw_pspi = self.compute_pspi(aus)
+            self._score_history.append(raw_pspi)
+
+            # Keep window size bounded
+            if len(self._score_history) > self.window_size:
+                self._score_history = self._score_history[-self.window_size:]
+
+            # Temporal smoothing: weighted average favoring recent frames
+            if len(self._score_history) >= 3:
+                weights = np.linspace(0.5, 1.0, len(self._score_history))
+                smoothed_pspi = float(np.average(self._score_history, weights=weights))
+            else:
+                smoothed_pspi = raw_pspi
+
+            # Confidence based on score consistency
+            if len(self._score_history) >= 5:
+                std = np.std(self._score_history[-5:])
+                confidence = max(0.0, 1.0 - std / 5.0)  # Lower std = higher confidence
+            else:
+                confidence = 0.3  # Low confidence with few frames
+
+            pain_level = self.classify_pain(smoothed_pspi)
+
+            contributing = {
+                "AU4_brow_lower": round(aus.AU4, 3),
+                "AU6_cheek_raise": round(aus.AU6, 3),
+                "AU7_lid_tighten": round(aus.AU7, 3),
+                "AU9_nose_wrinkle": round(aus.AU9, 3),
+                "AU10_lip_raise": round(aus.AU10, 3),
+                "AU43_eyes_closed": round(aus.AU43, 3),
+            }
+
+            return PainAssessment(
+                pspi_score=round(smoothed_pspi, 2),
+                pain_level=pain_level,
+                contributing_aus=contributing,
+                confidence=round(confidence, 2),
+                timestamp=timestamp,
+            )
+        except Exception as e:
+            logger.error(f"Error in pain assessment: {e}")
             return PainAssessment(timestamp=timestamp)
-
-        raw_pspi = self.compute_pspi(aus)
-        self._score_history.append(raw_pspi)
-
-        # Keep window size bounded
-        if len(self._score_history) > self.window_size:
-            self._score_history = self._score_history[-self.window_size:]
-
-        # Temporal smoothing: weighted average favoring recent frames
-        if len(self._score_history) >= 3:
-            weights = np.linspace(0.5, 1.0, len(self._score_history))
-            smoothed_pspi = float(np.average(self._score_history, weights=weights))
-        else:
-            smoothed_pspi = raw_pspi
-
-        # Confidence based on score consistency
-        if len(self._score_history) >= 5:
-            std = np.std(self._score_history[-5:])
-            confidence = max(0.0, 1.0 - std / 5.0)  # Lower std = higher confidence
-        else:
-            confidence = 0.3  # Low confidence with few frames
-
-        pain_level = self.classify_pain(smoothed_pspi)
-
-        contributing = {
-            "AU4_brow_lower": round(aus.AU4, 3),
-            "AU6_cheek_raise": round(aus.AU6, 3),
-            "AU7_lid_tighten": round(aus.AU7, 3),
-            "AU9_nose_wrinkle": round(aus.AU9, 3),
-            "AU10_lip_raise": round(aus.AU10, 3),
-            "AU43_eyes_closed": round(aus.AU43, 3),
-        }
-
-        return PainAssessment(
-            pspi_score=round(smoothed_pspi, 2),
-            pain_level=pain_level,
-            contributing_aus=contributing,
-            confidence=round(confidence, 2),
-            timestamp=timestamp,
-        )
 
     def get_trend(self) -> str:
         """Get pain trend over recent window."""
-        if len(self._score_history) < 5:
-            return "insufficient_data"
-        recent = np.mean(self._score_history[-3:])
-        older = np.mean(self._score_history[-6:-3])
-        diff = recent - older
-        if diff > 0.5:
-            return "increasing"
-        elif diff < -0.5:
-            return "decreasing"
-        return "stable"
+        try:
+            if len(self._score_history) < 5:
+                return "insufficient_data"
+            recent = np.mean(self._score_history[-3:])
+            older = np.mean(self._score_history[-6:-3])
+            diff = recent - older
+            if diff > 0.5:
+                return "increasing"
+            elif diff < -0.5:
+                return "decreasing"
+            return "stable"
+        except Exception as e:
+            logger.error(f"Error computing pain trend: {e}")
+            return "error"
 
     def reset(self):
         self._score_history.clear()

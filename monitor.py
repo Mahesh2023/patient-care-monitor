@@ -33,6 +33,7 @@ from modules.text_sentiment import TextSentimentAnalyzer
 from modules.fusion_engine import FusionEngine, PatientAlertLevel
 from alerts.alert_system import AlertSystem
 from utils.session_logger import SessionLogger
+from utils.logging_config import setup_logging
 
 
 class PatientCareMonitor:
@@ -375,6 +376,9 @@ class PatientCareMonitor:
 
 
 def main():
+    # Setup logging
+    setup_logging(log_level="INFO", console=True)
+    
     parser = argparse.ArgumentParser(
         description="Patient Care Monitor - Multimodal monitoring for caregivers"
     )
@@ -384,7 +388,15 @@ def main():
                         help="Run demo mode with synthetic data")
     parser.add_argument("--camera", type=int, default=0,
                         help="Camera device index (default: 0)")
+    parser.add_argument("--log-level", type=str, default="INFO",
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+                        help="Logging level (default: INFO)")
     args = parser.parse_args()
+
+    # Update log level if specified
+    if args.log_level != "INFO":
+        from utils.logging_config import set_log_level
+        set_log_level(args.log_level)
 
     monitor = PatientCareMonitor()
 
