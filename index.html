@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Care Monitor - Modern Healthcare Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <span class="brand-icon">🏥</span>
+                <span class="brand-text">Patient Care Monitor</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#analyze" class="nav-link">Analyze</a></li>
+                <li><a href="#nutrition" class="nav-link">Nutrition</a></li>
+                <li><a href="#health" class="nav-link">Health Checkup</a></li>
+                <li><a href="#psychiatry" class="nav-link">Psychiatry</a></li>
+                <li><a href="#results" class="nav-link">Results</a></li>
+                <li><a href="#agents" class="nav-link">Agents</a></li>
+                <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
+            </ul>
+            <button class="nav-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Decode Your Health</h1>
+            <p class="hero-subtitle">Advanced patient monitoring with AI-powered analysis</p>
+            <div class="hero-actions">
+                <button class="btn btn-primary" onclick="showSection('analyze')">Start Analysis</button>
+                <button class="btn btn-secondary" onclick="showSection('upload')">Upload Profile</button>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="hero-card">
+                <div class="card-icon">🧬</div>
+                <h3>Genomic Analysis</h3>
+                <p>Decode your genetic markers</p>
+            </div>
+            <div class="hero-card">
+                <div class="card-icon">🩺</div>
+                <h3>Health Screening</h3>
+                <p>Comprehensive health checkup</p>
+            </div>
+            <div class="hero-card">
+                <div class="card-icon">🥗</div>
+                <h3>Nutrition Planning</h3>
+                <p>Personalized meal plans</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analyze Section -->
+    <section id="analyze" class="section hidden">
+        <div class="container">
+            <h2 class="section-title">🔬 Analyze Your Health</h2>
+            <p class="section-subtitle">Upload your data for comprehensive analysis</p>
+            
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📤</div>
+                <h3>Drop your files here</h3>
+                <p>or click to browse</p>
+                <input type="file" id="fileInput" multiple>
+                <button class="btn btn-primary">Select Files</button>
+            </div>
+            
+            <div class="analysis-options">
+                <h3>Analysis Options</h3>
+                <div class="option-grid">
+                    <label class="option-card">
+                        <input type="checkbox" checked>
+                        <span class="option-icon">🧬</span>
+                        <span class="option-text">Genomic Analysis</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="checkbox" checked>
+                        <span class="option-icon">🩺</span>
+                        <span class="option-text">Health Screening</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="checkbox" checked>
+                        <span class="option-icon">🥗</span>
+                        <span class="option-text">Nutrition Analysis</span>
+                    </label>
+                    <label class="option-card">
+                        <input type="checkbox">
+                        <span class="option-icon">🦴</span>
+                        <span class="option-text">Dermatological</span>
+                    </label>
+                </div>
+                <button class="btn btn-primary btn-large" onclick="runAnalysis()">Start Analysis</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Nutrition Section -->
+    <section id="nutrition" class="section hidden">
+        <div class="container">
+            <h2 class="section-title">🥗 Nutrition Planner</h2>
+            <p class="section-subtitle">Personalized meal plans based on your profile</p>
+            
+            <div class="profile-form">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select>
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" value="30" min="18" max="100">
+                    </div>
+                    <div class="form-group">
+                        <label>Weight (kg)</label>
+                        <input type="number" value="70" min="30" max="200">
+                    </div>
+                    <div class="form-group">
+                        <label>Height (cm)</label>
+                        <input type="number" value="170" min="100" max="250">
+                    </div>
+                    <div class="form-group">
+                        <label>Activity Level</label>
+                        <select>
+                            <option>Sedentary</option>
+                            <option>Moderate</option>
+                            <option>Active</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Goal</label>
+                        <select>
+                            <option>Maintain Weight</option>
+                            <option>Lose Weight</option>
+                            <option>Gain Weight</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="dietary-restrictions">
+                    <h3>Dietary Restrictions</h3>
+                    <div class="restriction-tags">
+                        <label class="tag">
+                            <input type="checkbox"> Vegetarian
+                        </label>
+                        <label class="tag">
+                            <input type="checkbox"> Vegan
+                        </label>
+                        <label class="tag">
+                            <input type="checkbox"> Gluten-Free
+                        </label>
+                        <label class="tag">
+                            <input type="checkbox"> Dairy-Free
+                        </label>
+                        <label class="tag">
+                            <input type="checkbox"> Low-Sodium
+                        </label>
+                        <label class="tag">
+                            <input type="checkbox"> Diabetic
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-large" onclick="generateMealPlan()">Generate Meal Plan</button>
+            </div>
+            
+            <div id="mealPlanResult" class="result-panel hidden">
+                <h3>Your Personalized Meal Plan</h3>
+                <div class="meal-summary">
+                    <div class="summary-card">
+                        <span class="summary-value">2000</span>
+                        <span class="summary-label">Daily Calories</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="summary-value">30</span>
+                        <span class="summary-label">Days</span>
+                    </div>
+                    <div class="summary-card">
+                        <span class="summary-value">Balanced</span>
+                        <span class="summary-label">Plan Type</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Health Checkup Section -->
+    <section id="health" class="section hidden">
+        <div class="container">
+            <h2 class="section-title">🩺 Health Checkup Analysis</h2>
+            <p class="section-subtitle">Analyze your lab test results</p>
+            
+            <div class="health-input">
+                <div class="input-tabs">
+                    <button class="tab-btn active" onclick="switchTab('manual')">Manual Entry</button>
+                    <button class="tab-btn" onclick="switchTab('upload')">Upload Report</button>
+                </div>
+                
+                <div id="manualTab" class="tab-content active">
+                    <div class="lab-parameters">
+                        <h3>Blood Test Parameters</h3>
+                        <div class="lab-grid">
+                            <div class="lab-field">
+                                <label>Hemoglobin (g/dL)</label>
+                                <input type="number" value="14.0" step="0.1">
+                            </div>
+                            <div class="lab-field">
+                                <label>RBC (million/µL)</label>
+                                <input type="number" value="4.5" step="0.1">
+                            </div>
+                            <div class="lab-field">
+                                <label>WBC (thousand/µL)</label>
+                                <input type="number" value="7.0" step="0.1">
+                            </div>
+                            <div class="lab-field">
+                                <label>Fasting Glucose (mg/dL)</label>
+                                <input type="number" value="90">
+                            </div>
+                            <div class="lab-field">
+                                <label>HbA1c (%)</label>
+                                <input type="number" value="5.0" step="0.1">
+                            </div>
+                            <div class="lab-field">
+                                <label>Total Cholesterol (mg/dL)</label>
+                                <input type="number" value="180">
+                            </div>
+                            <div class="lab-field">
+                                <label>LDL (mg/dL)</label>
+                                <input type="number" value="100">
+                            </div>
+                            <div class="lab-field">
+                                <label>HDL (mg/dL)</label>
+                                <input type="number" value="50">
+                            </div>
+                            <div class="lab-field">
+                                <label>Triglycerides (mg/dL)</label>
+                                <input type="number" value="150">
+                            </div>
+                        </div>
+                        
+                        <h3>Urine Test Parameters</h3>
+                        <div class="lab-grid">
+                            <div class="lab-field">
+                                <label>pH</label>
+                                <input type="number" value="6.0" step="0.1" min="4" max="9">
+                            </div>
+                            <div class="lab-field">
+                                <label>Protein (mg/dL)</label>
+                                <input type="number" value="0">
+                            </div>
+                            <div class="lab-field">
+                                <label>Glucose (mg/dL)</label>
+                                <input type="number" value="0">
+                            </div>
+                            <div class="lab-field">
+                                <label>Ketones (mg/dL)</label>
+                                <input type="number" value="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="uploadTab" class="tab-content">
+                    <div class="upload-zone">
+                        <div class="upload-icon">📄</div>
+                        <h3>Paste report text here</h3>
+                        <textarea id="reportText" placeholder="Paste your lab report text..."></textarea>
+                        <button class="btn btn-primary">Parse Report</button>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-large" onclick="analyzeHealth()">Analyze Health Checkup</button>
+            </div>
+            
+            <div id="healthResult" class="result-panel hidden">
+                <h3>Health Analysis Results</h3>
+                <div class="health-score">
+                    <div class="score-circle">
+                        <span class="score-value">85</span>
+                        <span class="score-label">/100</span>
+                    </div>
+                    <span class="score-status">Good</span>
+                </div>
+                <div class="conditions">
+                    <h4>Detected Conditions</h4>
+                    <div class="condition-list">
+                        <div class="condition-item normal">
+                            <span class="condition-name">Hemoglobin</span>
+                            <span class="condition-status">Normal</span>
+                        </div>
+                        <div class="condition-item warning">
+                            <span class="condition-name">Cholesterol</span>
+                            <span class="condition-status">Slightly Elevated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Psychiatry Section -->
+    <section id="psychiatry" class="section hidden">
+        <div class="container">
+            <h2 class="section-title">🧠 Psychiatry Support</h2>
+            <p class="section-subtitle">Mental health support and analysis</p>
+            
+            <div class="psychiatry-options">
+                <div class="psych-card">
+                    <div class="psych-icon">🆘</div>
+                    <h3>Trauma First Aid</h3>
+                    <p>Crisis intervention tools</p>
+                    <button class="btn btn-primary" onclick="showSection('trauma')">Access Tools</button>
+                </div>
+                <div class="psych-card">
+                    <div class="psych-icon">💬</div>
+                    <h3>Voice Counselling</h3>
+                    <p>AI-powered voice analysis</p>
+                    <button class="btn btn-primary">Start Session</button>
+                </div>
+                <div class="psych-card">
+                    <div class="psych-icon">📝</div>
+                    <h3>Text Analysis</h3>
+                    <p>Sentiment and mood analysis</p>
+                    <button class="btn btn-primary">Analyze Text</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trauma Support Section -->
+    <section id="trauma" class="section hidden">
+        <div class="container">
+            <div class="emergency-banner">
+                <span class="emergency-icon">⚠️</span>
+                <span>If you or someone is in immediate danger, call 911 or 988 immediately</span>
+            </div>
+            
+            <h2 class="section-title">🆘 Trauma First Aid</h2>
+            <p class="section-subtitle">Crisis intervention and grounding techniques</p>
+            
+            <div class="emergency-contacts">
+                <h3>Emergency Contacts</h3>
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <span class="contact-number">911</span>
+                        <span class="contact-label">Emergency Services</span>
+                    </div>
+                    <div class="contact-card">
+                        <span class="contact-number">988</span>
+                        <span class="contact-label">Suicide Prevention</span>
+                    </div>
+                    <div class="contact-card">
+                        <span class="contact-number">1-800-222-1222</span>
+                        <span class="contact-label">Poison Control</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grounding-exercise">
+                <h3>🧘 5-4-3-2-1 Sensory Grounding</h3>
+                <p>A technique to manage anxiety and dissociation</p>
+                <div class="grounding-steps">
+                    <div class="step-card">
+                        <span class="step-number">5</span>
+                        <span class="step-text">Things you can SEE</span>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-number">4</span>
+                        <span class="step-text">Things you can TOUCH</span>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-number">3</span>
+                        <span class="step-text">Things you can HEAR</span>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-number">2</span>
+                        <span class="step-text">Things you can SMELL</span>
+                    </div>
+                    <div class="step-card">
+                        <span class="step-number">1</span>
+                        <span class="step-text">Thing you can TASTE</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="startGrounding()">Start Guided Exercise</button>
+            </div>
+            
+            <div class="breathing-exercises">
+                <h3>🌬️ Breathing Exercises</h3>
+                <div class="breathing-options">
+                    <button class="breathing-btn active">Box Breathing (4-4-4-4)</button>
+                    <button class="breathing-btn">4-7-8 Breathing</button>
+                    <button class="breathing-btn">Equal Breathing</button>
+                </div>
+                <button class="btn btn-primary btn-large" onclick="startBreathing()">Start Breathing Exercise</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section id="results" class="section hidden">
+        <div class="container">
+            <h2 class="section-title">📊 Analysis Results</h2>
+            <p class="section-subtitle">Your comprehensive health analysis</p>
+            
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-icon">💊</div>
+                    <h3>Pharmacogenomic Profile</h3>
+                    <p>Drug response predictions</p>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon">🩺</div>
+                    <h3>Health Screening</h3>
+                    <p>Comprehensive health indicators</p>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon">🦴</div>
+                    <h3>Dermatological Analysis</h3>
+                    <p>Skin health assessment</p>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon">🔍</div>
+                    <h3>Condition Screening</h3>
+                    <p>Disease risk assessment</p>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon">🌍</div>
+                    <h3>Ancestry Predictions</h3>
+                    <p>Genetic ancestry analysis</p>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon">🧬</div>
+                    <h3>Genetic Sequence</h3>
+                    <p>Reconstructed DNA markers</p>
+                </div>
+                <div class="result-card">
+                    <div class="result-icon">🥗</div>
+                    <h3>Dietary Recommendations</h3>
+                    <p>Personalized nutrition plan</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Agents Section -->
+    <section id="agents" class="section hidden">
+        <div class="container">
+            <h2 class="section-title">🤖 Multi-Agent System</h2>
+            <p class="section-subtitle">AI agents monitoring and analysis</p>
+            
+            <div class="agent-dashboard">
+                <div class="agent-metrics">
+                    <div class="metric-card">
+                        <span class="metric-value">4</span>
+                        <span class="metric-label">Active Agents</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value">156</span>
+                        <span class="metric-label">Tasks Completed</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value">98.5%</span>
+                        <span class="metric-label">Success Rate</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value">2.3s</span>
+                        <span class="metric-label">Avg Response</span>
+                    </div>
+                </div>
+                
+                <div class="agent-list">
+                    <h3>Agent Status</h3>
+                    <div class="agent-item">
+                        <span class="agent-name">Face Analyzer</span>
+                        <span class="agent-status active">Active</span>
+                    </div>
+                    <div class="agent-item">
+                        <span class="agent-name">Pain Detector</span>
+                        <span class="agent-status active">Active</span>
+                    </div>
+                    <div class="agent-item">
+                        <span class="agent-name">Voice Analyzer</span>
+                        <span class="agent-status idle">Idle</span>
+                    </div>
+                    <div class="agent-item">
+                        <span class="agent-name">Text Sentiment</span>
+                        <span class="agent-status active">Active</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="section hidden">
+        <div class="container">
+            <h2 class="section-title">📊 Dashboard</h2>
+            <p class="section-subtitle">System overview and monitoring</p>
+            
+            <div class="dashboard-grid">
+                <div class="dash-card">
+                    <h3>System Metrics</h3>
+                    <div class="metric-row">
+                        <span>CPU Usage</span>
+                        <span class="metric-val">45%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Memory Usage</span>
+                        <span class="metric-val">62%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span>Disk Usage</span>
+                        <span class="metric-val">38%</span>
+                    </div>
+                </div>
+                <div class="dash-card">
+                    <h3>Recent Sessions</h3>
+                    <div class="session-item">
+                        <span>Session #1234</span>
+                        <span class="session-time">2h ago</span>
+                    </div>
+                    <div class="session-item">
+                        <span>Session #1233</span>
+                        <span class="session-time">5h ago</span>
+                    </div>
+                    <div class="session-item">
+                        <span>Session #1232</span>
+                        <span class="session-time">1d ago</span>
+                    </div>
+                </div>
+                <div class="dash-card">
+                    <h3>Alerts</h3>
+                    <div class="alert-item warning">
+                        <span>Pain level elevated</span>
+                        <span class="alert-time">30m ago</span>
+                    </div>
+                    <div class="alert-item info">
+                        <span>Session completed</span>
+                        <span class="alert-time">2h ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Patient Care Monitor</h4>
+                    <p>Advanced healthcare platform with AI-powered analysis</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="#analyze">Analyze</a></li>
+                        <li><a href="#nutrition">Nutrition</a></li>
+                        <li><a href="#health">Health Checkup</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#privacy">Privacy Policy</a></li>
+                        <li><a href="#terms">Terms of Service</a></li>
+                        <li><a href="#consent">Data Consent</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Patient Care Monitor. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
