@@ -740,78 +740,78 @@ elif mode == "Health Checkup":
         input_method = st.radio("Input Method", ["Manual Entry", "Upload Report (Text)"])
         
         if input_method == "Manual Entry":
-        st.subheader("📝 Manual Entry")
-        
-        # Blood test parameters
-        with st.expander("Blood Test Parameters", expanded=True):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                hemoglobin = st.number_input("Hemoglobin (g/dL)", min_value=5.0, max_value=20.0, value=14.0, step=0.1)
-                rbc = st.number_input("RBC (million/µL)", min_value=2.0, max_value=7.0, value=4.5, step=0.1)
-                wbc = st.number_input("WBC (thousand/µL)", min_value=1.0, max_value=20.0, value=7.0, step=0.1)
-            with col2:
-                glucose_fasting = st.number_input("Fasting Glucose (mg/dL)", min_value=50, max_value=400, value=90)
-                hba1c = st.number_input("HbA1c (%)", min_value=3.0, max_value=15.0, value=5.0, step=0.1)
-                cholesterol_total = st.number_input("Total Cholesterol (mg/dL)", min_value=100, max_value=400, value=180)
-            with col3:
-                cholesterol_ldl = st.number_input("LDL Cholesterol (mg/dL)", min_value=50, max_value=250, value=100)
-                cholesterol_hdl = st.number_input("HDL Cholesterol (mg/dL)", min_value=20, max_value=100, value=50)
-                triglycerides = st.number_input("Triglycerides (mg/dL)", min_value=50, max_value=500, value=150)
-        
-        # Urine test parameters
-        with st.expander("Urine Test Parameters"):
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                urine_ph = st.number_input("pH", min_value=4.0, max_value=9.0, value=6.0, step=0.1)
-                urine_protein = st.number_input("Protein (mg/dL)", min_value=0, max_value=500, value=0)
-                urine_glucose = st.number_input("Glucose (mg/dL)", min_value=0, max_value=500, value=0)
-            with col2:
-                urine_ketones = st.number_input("Ketones (mg/dL)", min_value=0, max_value=500, value=0)
-                urine_bilirubin = st.number_input("Bilirubin (mg/dL)", min_value=0, max_value=5, value=0)
-                urine_nitrite = st.selectbox("Nitrite", [0, 1], format_func=lambda x: "Negative" if x == 0 else "Positive")
-            with col3:
-                urine_leukocytes = st.number_input("Leukocytes (/HPF)", min_value=0, max_value=50, value=0)
-                urine_rbc = st.number_input("RBC (/HPF)", min_value=0, max_value=20, value=0)
-        
-        # Gender for gender-specific ranges
-        gender = st.selectbox("Gender", ["male", "female"])
-        
-        if st.button("Analyze Health Checkup", type="primary"):
-            blood_data = {
-                "hemoglobin": hemoglobin,
-                "rbc": rbc,
-                "wbc": wbc,
-                "glucose_fasting": glucose_fasting,
-                "hba1c": hba1c,
-                "cholesterol_total": cholesterol_total,
-                "cholesterol_ldl": cholesterol_ldl,
-                "cholesterol_hdl": cholesterol_hdl,
-                "triglycerides": triglycerides
-            }
+            st.subheader("📝 Manual Entry")
             
-            urine_data = {
-                "ph": urine_ph,
-                "protein": urine_protein,
-                "glucose": urine_glucose,
-                "ketones": urine_ketones,
-                "bilirubin": urine_bilirubin,
-                "nitrite": urine_nitrite,
-                "leukocytes": urine_leukocytes,
-                "rbc": urine_rbc
-            }
+            # Blood test parameters
+            with st.expander("Blood Test Parameters", expanded=True):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    hemoglobin = st.number_input("Hemoglobin (g/dL)", min_value=5.0, max_value=20.0, value=14.0, step=0.1)
+                    rbc = st.number_input("RBC (million/µL)", min_value=2.0, max_value=7.0, value=4.5, step=0.1)
+                    wbc = st.number_input("WBC (thousand/µL)", min_value=1.0, max_value=20.0, value=7.0, step=0.1)
+                with col2:
+                    glucose_fasting = st.number_input("Fasting Glucose (mg/dL)", min_value=50, max_value=400, value=90)
+                    hba1c = st.number_input("HbA1c (%)", min_value=3.0, max_value=15.0, value=5.0, step=0.1)
+                    cholesterol_total = st.number_input("Total Cholesterol (mg/dL)", min_value=100, max_value=400, value=180)
+                with col3:
+                    cholesterol_ldl = st.number_input("LDL Cholesterol (mg/dL)", min_value=50, max_value=250, value=100)
+                    cholesterol_hdl = st.number_input("HDL Cholesterol (mg/dL)", min_value=20, max_value=100, value=50)
+                    triglycerides = st.number_input("Triglycerides (mg/dL)", min_value=50, max_value=500, value=150)
             
-            with st.spinner("Analyzing health checkup..."):
-                results = health_analyzer.full_analysis(blood_data, urine_data, gender=gender)
-                st.session_state.health_checkup_results = results
-    
-    else:
-        st.subheader("📄 Upload Report")
-        report_text = st.text_area("Paste report text here", height=200)
+            # Urine test parameters
+            with st.expander("Urine Test Parameters"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    urine_ph = st.number_input("pH", min_value=4.0, max_value=9.0, value=6.0, step=0.1)
+                    urine_protein = st.number_input("Protein (mg/dL)", min_value=0, max_value=500, value=0)
+                    urine_glucose = st.number_input("Glucose (mg/dL)", min_value=0, max_value=500, value=0)
+                with col2:
+                    urine_ketones = st.number_input("Ketones (mg/dL)", min_value=0, max_value=500, value=0)
+                    urine_bilirubin = st.number_input("Bilirubin (mg/dL)", min_value=0, max_value=5, value=0)
+                    urine_nitrite = st.selectbox("Nitrite", [0, 1], format_func=lambda x: "Negative" if x == 0 else "Positive")
+                with col3:
+                    urine_leukocytes = st.number_input("Leukocytes (/HPF)", min_value=0, max_value=50, value=0)
+                    urine_rbc = st.number_input("RBC (/HPF)", min_value=0, max_value=20, value=0)
+            
+            # Gender for gender-specific ranges
+            gender = st.selectbox("Gender", ["male", "female"])
+            
+            if st.button("Analyze Health Checkup", type="primary"):
+                blood_data = {
+                    "hemoglobin": hemoglobin,
+                    "rbc": rbc,
+                    "wbc": wbc,
+                    "glucose_fasting": glucose_fasting,
+                    "hba1c": hba1c,
+                    "cholesterol_total": cholesterol_total,
+                    "cholesterol_ldl": cholesterol_ldl,
+                    "cholesterol_hdl": cholesterol_hdl,
+                    "triglycerides": triglycerides
+                }
+                
+                urine_data = {
+                    "ph": urine_ph,
+                    "protein": urine_protein,
+                    "glucose": urine_glucose,
+                    "ketones": urine_ketones,
+                    "bilirubin": urine_bilirubin,
+                    "nitrite": urine_nitrite,
+                    "leukocytes": urine_leukocytes,
+                    "rbc": urine_rbc
+                }
+                
+                with st.spinner("Analyzing health checkup..."):
+                    results = health_analyzer.full_analysis(blood_data, urine_data, gender=gender)
+                    st.session_state.health_checkup_results = results
         
-        if st.button("Parse Report", type="primary"):
-            with st.spinner("Parsing report..."):
-                parsed = st.session_state.report_parser.parse_report(report_text)
-                st.session_state.parsed_report = parsed
+        else:
+            st.subheader("📄 Upload Report")
+            report_text = st.text_area("Paste report text here", height=200)
+            
+            if st.button("Parse Report", type="primary"):
+                with st.spinner("Parsing report..."):
+                    parsed = st.session_state.report_parser.parse_report(report_text)
+                    st.session_state.parsed_report = parsed
     
     # Display results
     if "health_checkup_results" in st.session_state:
