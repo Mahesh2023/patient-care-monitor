@@ -29,12 +29,12 @@ RUN mkdir -p data/session_logs
 # Version marker - force rebuild
 # Dashboard v2.0 - Redesigned from scratch
 
-# Render.com sets PORT env var; default to 7860 for Gradio
-ENV PORT=7860
+# Render.com sets PORT env var
+ENV PORT=8501
 EXPOSE ${PORT}
 
 # Health check
 HEALTHCHECK CMD curl --fail http://localhost:${PORT}/ || exit 1
 
-# Run Gradio app
-CMD python app.py
+# Run Streamlit dashboard
+CMD streamlit run dashboard.py --server.port=${PORT} --server.address=0.0.0.0
