@@ -33,6 +33,19 @@ app.add_middleware(
 # Get the current directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+print(f"BASE_DIR: {BASE_DIR}")
+print(f"Current working directory: {os.getcwd()}")
+print(f"Files in BASE_DIR: {os.listdir(BASE_DIR) if os.path.exists(BASE_DIR) else 'DIR NOT FOUND'}")
+
+# Check if static files exist
+css_path = os.path.join(BASE_DIR, "styles.css")
+js_path = os.path.join(BASE_DIR, "app.js")
+html_path = os.path.join(BASE_DIR, "index.html")
+
+print(f"CSS exists: {os.path.exists(css_path)} at {css_path}")
+print(f"JS exists: {os.path.exists(js_path)} at {js_path}")
+print(f"HTML exists: {os.path.exists(html_path)} at {html_path}")
+
 # Mount static files for CSS and JS at root level
 app.mount("/static", StaticFiles(directory=BASE_DIR), name="static")
 
@@ -53,18 +66,22 @@ async def get_styles():
     """Serve styles.css"""
     try:
         css_path = os.path.join(BASE_DIR, "styles.css")
+        print(f"Serving CSS from: {css_path}, exists: {os.path.exists(css_path)}")
         return FileResponse(css_path, media_type="text/css")
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="styles.css not found")
+        print(f"CSS not found at {css_path}")
+        raise HTTPException(status_code=404, detail=f"styles.css not found at {css_path}")
 
 @app.get("/app.js")
 async def get_app_js():
     """Serve app.js"""
     try:
         js_path = os.path.join(BASE_DIR, "app.js")
+        print(f"Serving JS from: {js_path}, exists: {os.path.exists(js_path)}")
         return FileResponse(js_path, media_type="application/javascript")
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="app.js not found")
+        print(f"JS not found at {js_path}")
+        raise HTTPException(status_code=404, detail=f"app.js not found at {js_path}")
 
 @app.post("/api/analyze")
 async def analyze_data(
