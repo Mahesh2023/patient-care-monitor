@@ -890,8 +890,6 @@ elif mode == "Agent Dashboard":
         # Detailed metrics
         with st.expander("Detailed System Metrics", expanded=False):
             st.json(system_metrics)
-    else:
-        st.error("Error retrieving system metrics")
     
     # Summary stats
     st.subheader("📈 Summary Statistics")
