@@ -286,17 +286,7 @@ with st.sidebar:
     st.divider()
 
     # Mode selector
-    available_modes = ["Dashboard", "Trauma Support", "Nutrition Planner", "Session Review", "Text Analysis", "Research", "About"]
-    
-    # Add Health Checkup if analyzer is available
-    if st.session_state.get("health_checkup_analyzer") is not None:
-        available_modes.insert(3, "Health Checkup")
-    
-    # Add Agent Dashboard if psutil is available
-    if PSUTIL_AVAILABLE:
-        available_modes.insert(4, "Agent Dashboard")
-    
-    mode = st.radio("Mode", available_modes)
+    mode = st.radio("Mode", ["Dashboard", "Trauma Support", "Nutrition Planner", "Health Checkup", "Agent Dashboard", "Session Review", "Text Analysis", "Research", "About"])
 
     st.divider()
 
