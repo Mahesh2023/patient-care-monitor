@@ -7,6 +7,15 @@ Version: 2.0 - Redesigned from scratch
 
 import streamlit as st
 import sys
+import os
+
+# Add project root to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from modules.nutrition_planner import NutritionPlanner
+from modules.health_checkup import HealthCheckupAnalyzer
+from modules.text_sentiment import TextSentimentAnalyzer
+from modules.trauma_support import TraumaSupport
 
 # Page config
 st.set_page_config(
@@ -200,42 +209,40 @@ elif mode == "Nutrition Planner":
     days = st.slider("Number of days", 7, 30, 30)
     
     if st.button("Generate Meal Plan", type="primary"):
-        # Calculate calorie target (simplified Mifflin-St Jeor)
-        if gender == "Male":
-            bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age + 5
-        else:
-            bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age - 161
-        
-        activity_multiplier = {
-            "Sedentary": 1.2,
-            "Moderate": 1.55,
-            "Active": 1.725
-        }[activity_level]
-        
-        goal_adjustment = {
-            "Maintain Weight": 1.0,
-            "Lose Weight": 0.85,
-            "Gain Weight": 1.15
-        }[goal]
-        
-        calorie_target = int(bmr * activity_multiplier * goal_adjustment)
-        
-        st.success(f"Generated {days}-day meal plan with {calorie_target} kcal daily target!")
-        
-        # Show sample meal plan
-        st.subheader("📋 Sample Meal Plan")
-        st.write(f"**Daily Calorie Target:** {calorie_target} kcal")
-        st.write(f"**Duration:** {days} days")
-        
-        st.divider()
-        
-        # Show first 3 days
-        for day in range(1, 4):
-            with st.expander(f"Day {day}", expanded=False):
-                st.write(f"**Breakfast:** Sample breakfast (~{int(calorie_target * 0.25)} kcal)")
-                st.write(f"**Lunch:** Sample lunch (~{int(calorie_target * 0.35)} kcal)")
-                st.write(f"**Dinner:** Sample dinner (~{int(calorie_target * 0.30)} kcal)")
-                st.write(f"**Snacks:** Sample snacks (~{int(calorie_target * 0.10)} kcal)")
+        try:
+            planner = NutritionPlanner()
+            meal_plan = planner.generate_meal_plan(
+                gender=gender.lower(),
+                age=age,
+                weight_kg=weight_kg,
+                height_cm=height_cm,
+                activity_level=activity_level.lower(),
+                goal=goal.lower().replace(" ", "_"),
+                dietary_restrictions=[r.lower().replace("-", "_") for r in restrictions],
+                region=region.lower(),
+                days=days
+            )
+            
+            st.success(f"Generated {days}-day meal plan with {meal_plan['daily_calorie_target']} kcal daily target!")
+            
+            # Show meal plan
+            st.subheader("📋 Your Meal Plan")
+            st.write(f"**Daily Calorie Target:** {meal_plan['daily_calorie_target']} kcal")
+            st.write(f"**Duration:** {days} days")
+            st.write(f"**Plan Type:** {meal_plan['plan_type']}")
+            
+            st.divider()
+            
+            # Show first 5 days
+            for day_plan in meal_plan['meal_plan'][:5]:
+                with st.expander(f"Day {day_plan['day']}", expanded=False):
+                    st.write(f"**Breakfast:** {day_plan['breakfast']['food']} ({day_plan['breakfast']['calories']} kcal)")
+                    st.write(f"**Lunch:** {day_plan['lunch']['food']} ({day_plan['lunch']['calories']} kcal)")
+                    st.write(f"**Dinner:** {day_plan['dinner']['food']} ({day_plan['dinner']['calories']} kcal)")
+                    st.write(f"**Snacks:** {day_plan['snack']['food']} ({day_plan['snack']['calories']} kcal)")
+                    st.write(f"**Total:** {day_plan['total_calories']} kcal")
+        except Exception as e:
+            st.error(f"Error generating meal plan: {str(e)}")
 
 # Health Checkup Mode
 elif mode == "Health Checkup":
@@ -290,48 +297,76 @@ elif mode == "Health Checkup":
         gender = st.selectbox("Gender", ["Male", "Female"])
         
         if st.button("Analyze Health Checkup", type="primary"):
-            # Simplified analysis
-            health_score = 100
-            abnormalities = []
-            
-            # Check for abnormalities
-            if hemoglobin < 12 or hemoglobin > 17:
-                abnormalities.append("Hemoglobin")
-            if glucose_fasting > 100:
-                abnormalities.append("Fasting Glucose")
-            if hba1c > 5.7:
-                abnormalities.append("HbA1c")
-            if cholesterol_total > 200:
-                abnormalities.append("Total Cholesterol")
-            if cholesterol_ldl > 100:
-                abnormalities.append("LDL Cholesterol")
-            
-            if abnormalities:
-                health_score = max(0, 100 - len(abnormalities) * 10)
-            
-            st.success("Health checkup analysis complete!")
-            
-            st.subheader("📊 Analysis Results")
-            col1, col2 = st.columns(2)
-            with col1:
-                st.metric("Health Score", f"{health_score}/100")
-            with col2:
-                status = "Excellent" if health_score >= 90 else "Good" if health_score >= 75 else "Fair" if health_score >= 60 else "Poor"
-                st.metric("Health Status", status)
-            
-            if abnormalities:
-                st.subheader("⚠️ Detected Abnormalities")
-                for abnormality in abnormalities:
-                    st.warning(f"{abnormality} - outside normal range")
-            else:
-                st.success("All parameters within normal range")
+            try:
+                analyzer = HealthCheckupAnalyzer()
+                
+                # Build blood test parameters
+                blood_params = {
+                    "hemoglobin": hemoglobin,
+                    "rbc": rbc,
+                    "wbc": wbc,
+                    "glucose_fasting": glucose_fasting,
+                    "hba1c": hba1c,
+                    "cholesterol_total": cholesterol_total,
+                    "cholesterol_ldl": cholesterol_ldl,
+                    "cholesterol_hdl": cholesterol_hdl,
+                    "triglycerides": triglycerides
+                }
+                
+                # Build urine test parameters
+                urine_params = {
+                    "ph": urine_ph,
+                    "protein": urine_protein,
+                    "glucose": urine_glucose,
+                    "ketones": urine_ketones,
+                    "bilirubin": urine_bilirubin,
+                    "nitrite": urine_nitrite,
+                    "leukocytes": urine_leukocytes,
+                    "rbc": urine_rbc
+                }
+                
+                result = analyzer.analyze_blood_urine_tests(
+                    blood_params=blood_params,
+                    urine_params=urine_params,
+                    gender=gender.lower()
+                )
+                
+                st.success("Health checkup analysis complete!")
+                
+                st.subheader("📊 Analysis Results")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("Health Score", f"{result['health_score']}/100")
+                with col2:
+                    st.metric("Health Status", result['health_status'].title())
+                
+                if result['detected_conditions']:
+                    st.subheader("⚠️ Detected Conditions")
+                    for condition in result['detected_conditions']:
+                        severity_emoji = "🟢" if condition['severity'] == "low" else "🟡" if condition['severity'] == "moderate" else "🔴"
+                        st.warning(f"{severity_emoji} {condition['name']}: {condition['severity'].title()} severity")
+                else:
+                    st.success("All parameters within normal range")
+                
+                if result['dietary_recommendations']:
+                    st.subheader("🥗 Dietary Recommendations")
+                    for rec in result['dietary_recommendations']:
+                        st.info(rec)
+            except Exception as e:
+                st.error(f"Error analyzing health checkup: {str(e)}")
     
     else:
         st.subheader("📄 Upload Report")
         report_text = st.text_area("Paste report text here", height=200)
         
         if st.button("Parse Report", type="primary"):
-            st.success("Report parsing feature - would extract lab values from text")
+            try:
+                analyzer = HealthCheckupAnalyzer()
+                result = analyzer.parse_lab_report_text(report_text)
+                st.success("Report parsed successfully!")
+                st.json(result)
+            except Exception as e:
+                st.error(f"Error parsing report: {str(e)}")
 
 # Agent Dashboard Mode
 elif mode == "Agent Dashboard":
@@ -410,7 +445,30 @@ elif mode == "Text Analysis":
     
     if st.button("Analyze", type="primary"):
         if text_input.strip():
-            st.success("Text analysis feature - would analyze sentiment and detect pain/distress indicators")
+            try:
+                analyzer = TextSentimentAnalyzer()
+                result = analyzer.analyze(text_input)
+                
+                st.success("Text analysis complete!")
+                
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Valence", f"{result.valence:.2f}")
+                with col2:
+                    st.metric("Arousal", f"{result.arousal:.2f}")
+                with col3:
+                    st.metric("Confidence", f"{result.confidence:.2f}")
+                
+                if result.pain_mentioned:
+                    st.warning("⚠️ Pain indicators detected")
+                if result.distress_mentioned:
+                    st.error("🚨 Distress indicators detected")
+                
+                if result.key_terms:
+                    st.subheader("Key Terms Detected")
+                    st.write(", ".join(result.key_terms))
+            except Exception as e:
+                st.error(f"Error analyzing text: {str(e)}")
 
 # Research Mode
 elif mode == "Research":
