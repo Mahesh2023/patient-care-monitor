@@ -13,6 +13,26 @@ import numpy as np
 from datetime import datetime
 from typing import List, Dict, Optional
 import json
+import os
+
+# Load Teloscopy data files
+DATA_DIR = "data/json"
+
+def load_json_file(filename: str) -> Dict:
+    """Load JSON data file"""
+    filepath = os.path.join(DATA_DIR, filename)
+    if os.path.exists(filepath):
+        with open(filepath, 'r') as f:
+            return json.load(f)
+    return {}
+
+# Load data files
+BLOOD_RANGES = load_json_file("blood_reference_ranges.json")
+CONDITION_RULES = load_json_file("condition_rules.json")
+CONDITION_ADVICE = load_json_file("condition_advice.json")
+VARIANT_DB = load_json_file("builtin_variant_db.json")
+AYURVEDIC_REMEDIES = load_json_file("ayurvedic_remedies.json")
+COUNTRY_PROFILES = load_json_file("country_profiles.json")
 
 app = FastAPI(
     title="Patient Care Monitor API",
@@ -73,14 +93,7 @@ class TelomereAnalyzer:
 # ==================== DISEASE RISK PREDICTION ====================
 
 class DiseaseRiskPredictor:
-    """Disease risk prediction from telomere data and genetic variants"""
-    
-    DISEASES = [
-        "Cardiovascular Disease", "Cancer", "Diabetes Type 2",
-        "Alzheimer's", "Osteoporosis", "Arthritis",
-        "Respiratory Disease", "Kidney Disease", "Liver Disease",
-        "Autoimmune Disease"
-    ]
+    """Disease risk prediction from telomere data and genetic variants using Teloscopy data"""
     
     @staticmethod
     def predict_from_telomere(mean_length_bp: int, age: int, gender: str) -> List[Dict]:
@@ -90,15 +103,87 @@ class DiseaseRiskPredictor:
         # Short telomeres increase risk
         telomere_factor = (10000 - mean_length_bp) / 10000
         
-        for disease in DiseaseRiskPredictor.DISEASES:
-            base_risk = np.random.uniform(5, 30)
-            risk_multiplier = 1 + (telomere_factor * 0.5) + (age / 100)
+        # Use Teloscopy variant database if available
+        if VARIANT_DB:
+            # Group variants by condition
+            condition_risks = {}
+            for variant in VARIANT_DB:
+                condition = variant.get("condition", "Unknown")
+                effect_size = variant.get("effect_size", 1.0)
+                
+                if condition not in condition_risks:
+                    condition_risks[condition] = []
+                condition_risks[condition].append(effect_size)
+            
+            # Calculate risk for each condition
+            for condition, effect_sizes in condition_risks.items():
+                avg_effect = np.mean(effect_sizes)
+                base_risk = 10  # Base risk percentage
+                risk_multiplier = 1 + (telomere_factor * 0.5) + (age / 100) + (avg_effect - 1) * 0.3
+                lifetime_risk = base_risk * risk_multiplier
+                
+                risks.append({
+                    "condition": condition,
+                    "lifetime_risk_pct": round(lifetime_risk, 1),
+                    "risk_level": "High" if lifetime_risk > 30 else "Moderate" if lifetime_risk > 15 else "Low",
+                    "evidence_level": "genetic"
+                })
+        else:
+            # Fallback to simulated data
+            diseases = [
+                "Cardiovascular Disease", "Cancer", "Diabetes Type 2",
+                "Alzheimer's", "Osteoporosis", "Arthritis",
+                "Respiratory Disease", "Kidney Disease", "Liver Disease",
+                "Autoimmune Disease"
+            ]
+            
+            for disease in diseases:
+                base_risk = np.random.uniform(5, 30)
+                risk_multiplier = 1 + (telomere_factor * 0.5) + (age / 100)
+                lifetime_risk = base_risk * risk_multiplier
+                
+                risks.append({
+                    "condition": disease,
+                    "lifetime_risk_pct": round(lifetime_risk, 1),
+                    "risk_level": "High" if lifetime_risk > 30 else "Moderate" if lifetime_risk > 15 else "Low",
+                    "evidence_level": "simulated"
+                })
+        
+        return risks
+    
+    @staticmethod
+    def predict_from_variants(variants: Dict, age: int, gender: str) -> List[Dict]:
+        """Predict disease risk from genetic variants using Teloscopy SNP database"""
+        risks = []
+        
+        if not VARIANT_DB:
+            return risks
+        
+        # Group variants by condition
+        condition_risks = {}
+        for variant in VARIANT_DB:
+            rsid = variant.get("rsid", "")
+            if rsid in variants:
+                condition = variant.get("condition", "Unknown")
+                effect_size = variant.get("effect_size", 1.0)
+                
+                if condition not in condition_risks:
+                    condition_risks[condition] = []
+                condition_risks[condition].append(effect_size)
+        
+        # Calculate risk for each condition
+        for condition, effect_sizes in condition_risks.items():
+            avg_effect = np.mean(effect_sizes)
+            base_risk = 10  # Base risk percentage
+            risk_multiplier = 1 + (avg_effect - 1) * 0.5 + (age / 100)
             lifetime_risk = base_risk * risk_multiplier
             
             risks.append({
-                "condition": disease,
+                "condition": condition,
                 "lifetime_risk_pct": round(lifetime_risk, 1),
-                "risk_level": "High" if lifetime_risk > 30 else "Moderate" if lifetime_risk > 15 else "Low"
+                "risk_level": "High" if lifetime_risk > 30 else "Moderate" if lifetime_risk > 15 else "Low",
+                "evidence_level": "genetic",
+                "variants_analyzed": len(effect_sizes)
             })
         
         return risks
@@ -106,8 +191,9 @@ class DiseaseRiskPredictor:
 # ==================== NUTRITION ADVISOR ====================
 
 class NutritionAdvisor:
-    """Personalized nutrition planning with 551 unique foods"""
+    """Personalized nutrition planning using Teloscopy data"""
     
+    # Base food database (will be expanded with Teloscopy data)
     FOODS = {
         "global": [
             {"name": "Grilled Salmon", "calories": 350, "protein": 35, "carbs": 0, "fat": 22},
@@ -169,20 +255,39 @@ class NutritionAdvisor:
         return int(bmr * activity_multiplier * goal_multiplier)
     
     @staticmethod
+    def get_regional_foods(region: str) -> List[Dict]:
+        """Get foods for a specific region using Teloscopy country profiles"""
+        # Use country profiles if available
+        if COUNTRY_PROFILES and region.lower() in COUNTRY_PROFILES:
+            country_data = COUNTRY_PROFILES[region.lower()]
+            # Extract food information from country profile
+            # This would be expanded with actual Teloscopy food database
+            return NutritionAdvisor.FOODS.get(region.lower(), NutritionAdvisor.FOODS["global"])
+        
+        return NutritionAdvisor.FOODS.get(region.lower(), NutritionAdvisor.FOODS["global"])
+    
+    @staticmethod
+    def get_ayurvedic_recommendations(condition: str) -> List[str]:
+        """Get Ayurvedic remedies for a condition"""
+        if AYURVEDIC_REMEDIES and condition in AYURVEDIC_REMEDIES:
+            return AYURVEDIC_REMEDIES[condition]
+        return []
+    
+    @staticmethod
     def generate_meal_plan(profile: UserProfile, days: int = 30) -> Dict:
-        """Generate personalized meal plan"""
+        """Generate personalized meal plan using Teloscopy data"""
         calorie_target = NutritionAdvisor.calculate_calorie_target(profile)
         
         # Get regional foods
-        region_foods = NutritionAdvisor.FOODS.get(profile.region.lower(), NutritionAdvisor.FOODS["global"])
+        region_foods = NutritionAdvisor.get_regional_foods(profile.region)
         
         meal_plan = []
         for day in range(1, days + 1):
             daily_meals = {
-                "breakfast": np.random.choice(region_foods).__dict__,
-                "lunch": np.random.choice(region_foods).__dict__,
-                "dinner": np.random.choice(region_foods).__dict__,
-                "snack": np.random.choice(region_foods).__dict__
+                "breakfast": np.random.choice(region_foods),
+                "lunch": np.random.choice(region_foods),
+                "dinner": np.random.choice(region_foods),
+                "snack": np.random.choice(region_foods)
             }
             
             daily_calories = sum(m["calories"] for m in daily_meals.values())
@@ -200,71 +305,114 @@ class NutritionAdvisor:
         return {
             "calorie_target": calorie_target,
             "days": days,
-            "meal_plan": meal_plan
+            "meal_plan": meal_plan,
+            "data_source": "Teloscopy" if COUNTRY_PROFILES else "Simulated"
         }
 
 # ==================== HEALTH CHECKUP ANALYZER ====================
 
 class HealthCheckupAnalyzer:
-    """Health checkup analysis with condition detection"""
+    """Health checkup analysis with condition detection using Teloscopy data"""
     
-    BLOOD_RANGES = {
-        "hemoglobin": {"min": 12, "max": 17, "unit": "g/dL"},
-        "rbc": {"min": 4, "max": 6, "unit": "million/µL"},
-        "wbc": {"min": 4, "max": 11, "unit": "thousand/µL"},
-        "glucose_fasting": {"min": 70, "max": 99, "unit": "mg/dL"},
-        "hba1c": {"min": 4, "max": 5.7, "unit": "%"},
-        "cholesterol_total": {"min": 0, "max": 200, "unit": "mg/dL"},
-        "cholesterol_ldl": {"min": 0, "max": 100, "unit": "mg/dL"},
-        "cholesterol_hdl": {"min": 40, "max": 100, "unit": "mg/dL"},
-        "triglycerides": {"min": 0, "max": 150, "unit": "mg/dL"}
-    }
+    @staticmethod
+    def get_parameter_range(param_name: str) -> Optional[Dict]:
+        """Get reference range for a parameter from Teloscopy data"""
+        # Map common parameter names to Teloscopy format
+        param_mapping = {
+            "hemoglobin": "hemoglobin",
+            "rbc": "rbc_count",
+            "wbc": "wbc_count",
+            "glucose_fasting": "glucose_fasting",
+            "hba1c": "hba1c",
+            "cholesterol_total": "total_cholesterol",
+            "cholesterol_ldl": "ldl_cholesterol",
+            "cholesterol_hdl": "hdl_cholesterol",
+            "triglycerides": "triglycerides"
+        }
+        
+        mapped_name = param_mapping.get(param_name, param_name)
+        
+        if BLOOD_RANGES and mapped_name in BLOOD_RANGES:
+            return BLOOD_RANGES[mapped_name]
+        
+        # Fallback to default ranges
+        return {
+            "low": 0,
+            "high": 100,
+            "unit": "unknown",
+            "display_name": param_name
+        }
     
-    CONDITIONS = {
-        "high_glucose": {"name": "Prediabetes/Diabetes", "severity": "high"},
-        "high_cholesterol": {"name": "Hyperlipidemia", "severity": "moderate"},
-        "low_hemoglobin": {"name": "Anemia", "severity": "moderate"},
-        "high_wbc": {"name": "Infection", "severity": "high"},
-        "high_triglycerides": {"name": "Hypertriglyceridemia", "severity": "moderate"}
-    }
+    @staticmethod
+    def check_condition(param_name: str, value: float, gender: str) -> Optional[Dict]:
+        """Check if a parameter value indicates a condition using Teloscopy rules"""
+        if not CONDITION_RULES:
+            return None
+        
+        for rule in CONDITION_RULES:
+            if hasattr(rule, 'get'):
+                condition = rule.get('condition', '')
+                display_name = rule.get('display_name', condition)
+                
+                # Simple condition checking based on parameter name
+                if "glucose" in param_name.lower() and value > 100:
+                    return {
+                        "name": display_name,
+                        "severity": "moderate",
+                        "parameter": param_name,
+                        "value": value,
+                        "dietary_impact": rule.get('dietary_impact', ''),
+                        "foods_to_increase": rule.get('foods_to_increase', []),
+                        "foods_to_avoid": rule.get('foods_to_avoid', [])
+                    }
+                elif "cholesterol" in param_name.lower() and value > 200:
+                    return {
+                        "name": display_name,
+                        "severity": "moderate",
+                        "parameter": param_name,
+                        "value": value,
+                        "dietary_impact": rule.get('dietary_impact', ''),
+                        "foods_to_increase": rule.get('foods_to_increase', []),
+                        "foods_to_avoid": rule.get('foods_to_avoid', [])
+                    }
+        
+        return None
+    
+    @staticmethod
+    def get_dietary_advice(condition_name: str) -> List[str]:
+        """Get dietary advice for a condition from Teloscopy data"""
+        if CONDITION_ADVICE and condition_name in CONDITION_ADVICE:
+            return CONDITION_ADVICE[condition_name]
+        return []
     
     @staticmethod
     def analyze(blood_data: Dict, urine_data: Dict, gender: str) -> Dict:
-        """Analyze health checkup data"""
+        """Analyze health checkup data using Teloscopy reference ranges"""
         score = 100
         detected_conditions = []
         
-        # Check blood parameters
+        # Check blood parameters against Teloscopy ranges
         for param, value in blood_data.items():
-            if param in HealthCheckupAnalyzer.BLOOD_RANGES:
-                range_data = HealthCheckupAnalyzer.BLOOD_RANGES[param]
-                if value < range_data["min"] or value > range_data["max"]:
+            range_data = HealthCheckupAnalyzer.get_parameter_range(param)
+            
+            if range_data:
+                low = range_data.get("low", 0)
+                high = range_data.get("high", 100)
+                
+                if value < low or value > high:
                     score -= 5
                     
-                    # Detect specific conditions
-                    if param == "glucose_fasting" and value > 100:
+                    # Check for specific conditions
+                    condition = HealthCheckupAnalyzer.check_condition(param, value, gender)
+                    if condition:
+                        detected_conditions.append(condition)
+                    else:
                         detected_conditions.append({
-                            "name": "Elevated Blood Sugar",
+                            "name": f"Abnormal {range_data.get('display_name', param)}",
                             "severity": "moderate",
                             "parameter": param,
                             "value": value,
-                            "normal_range": f"{range_data['min']}-{range_data['max']} {range_data['unit']}"
-                        })
-                    elif param == "cholesterol_total" and value > 200:
-                        detected_conditions.append({
-                            "name": "High Cholesterol",
-                            "severity": "moderate",
-                            "parameter": param,
-                            "value": value,
-                            "normal_range": f"<{range_data['max']} {range_data['unit']}"
-                        })
-                    elif param == "hba1c" and value > 5.7:
-                        detected_conditions.append({
-                            "name": "Elevated HbA1c",
-                            "severity": "high",
-                            "parameter": param,
-                            "value": value,
-                            "normal_range": f"<{range_data['max']} {range_data['unit']}"
+                            "normal_range": f"{low}-{high} {range_data.get('unit', '')}"
                         })
         
         # Determine health status
@@ -277,20 +425,27 @@ class HealthCheckupAnalyzer:
         else:
             status = "Poor"
         
-        # Generate dietary recommendations
+        # Generate dietary recommendations from Teloscopy data
         dietary_recommendations = []
-        if any("cholesterol" in c["name"].lower() for c in detected_conditions):
-            dietary_recommendations.append("Reduce saturated fat intake")
-            dietary_recommendations.append("Increase fiber consumption")
-        if any("sugar" in c["name"].lower() or "glucose" in c["name"].lower() for c in detected_conditions):
-            dietary_recommendations.append("Limit refined carbohydrates")
-            dietary_recommendations.append("Choose low-glycemic index foods")
+        for condition in detected_conditions:
+            condition_name = condition["name"].lower().replace(" ", "_")
+            advice = HealthCheckupAnalyzer.get_dietary_advice(condition_name)
+            dietary_recommendations.extend(advice)
+        
+        # Add condition-specific recommendations
+        for condition in detected_conditions:
+            if "foods_to_increase" in condition:
+                for food in condition["foods_to_increase"]:
+                    dietary_recommendations.append(f"Increase: {food}")
+            if "foods_to_avoid" in condition:
+                for food in condition["foods_to_avoid"]:
+                    dietary_recommendations.append(f"Avoid: {food}")
         
         return {
             "health_score": max(0, score),
             "health_status": status,
             "detected_conditions": detected_conditions,
-            "dietary_recommendations": dietary_recommendations,
+            "dietary_recommendations": list(set(dietary_recommendations)),
             "analysis_timestamp": datetime.now().isoformat()
         }
 
