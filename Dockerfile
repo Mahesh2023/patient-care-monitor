@@ -28,6 +28,8 @@ COPY backend.py .
 # Copy modules
 COPY modules/ ./modules/
 COPY utils/ ./utils/
+COPY teloscopy_modules/ ./teloscopy_modules/
+COPY data/ ./data/
 
 # Expose port
 ENV PORT=8000

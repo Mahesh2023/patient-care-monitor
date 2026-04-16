@@ -49,15 +49,27 @@ try:
     from modules.text_sentiment import TextSentimentAnalyzer
     from modules.fusion_engine import FusionEngine
     PATIENT_MONITORING_AVAILABLE = True
+    print("Patient monitoring modules loaded successfully")
 except ImportError as e:
     PATIENT_MONITORING_AVAILABLE = False
     print(f"Warning: Patient monitoring modules not available: {e}")
+except Exception as e:
+    PATIENT_MONITORING_AVAILABLE = False
+    print(f"Warning: Error loading patient monitoring modules: {e}")
 
 app = FastAPI(
     title="Patient Care Monitor API",
     description="Healthcare platform with telomere analysis, disease risk prediction, and nutrition planning",
     version="3.0"
 )
+
+print("=" * 50)
+print("Patient Care Monitor API Starting...")
+print("=" * 50)
+print(f"Patient Monitoring Available: {PATIENT_MONITORING_AVAILABLE}")
+print(f"Teloscopy Nutrition Available: {REAL_NUTRITION_AVAILABLE if 'REAL_NUTRITION_AVAILABLE' in locals() else False}")
+print(f"Teloscopy Agents Available: {REAL_AGENTS_AVAILABLE if 'REAL_AGENTS_AVAILABLE' in locals() else False}")
+print("=" * 50)
 
 # CORS middleware
 app.add_middleware(
@@ -97,9 +109,13 @@ class HealthCheckupData:
 try:
     from teloscopy_modules.telomere_pipeline import analyze_image as telomere_analyze_image
     REAL_TELOMERE_AVAILABLE = True
-except ImportError:
+    print("Teloscopy telomere pipeline loaded successfully")
+except ImportError as e:
     REAL_TELOMERE_AVAILABLE = False
-    print("Warning: Teloscopy telomere pipeline not available, using fallback")
+    print(f"Warning: Teloscopy telomere pipeline not available: {e}")
+except Exception as e:
+    REAL_TELOMERE_AVAILABLE = False
+    print(f"Warning: Error loading Teloscopy telomere pipeline: {e}")
 
 class TelomereAnalyzer:
     """Real telomere analysis using Teloscopy pipeline"""
@@ -225,9 +241,13 @@ try:
     from teloscopy_modules.diet_advisor import DietAdvisor
     from teloscopy_modules.regional_diets import COUNTRY_PROFILES as TEL_COUNTRY_PROFILES
     REAL_NUTRITION_AVAILABLE = True
-except ImportError:
+    print("Teloscopy nutrition modules loaded successfully")
+except ImportError as e:
     REAL_NUTRITION_AVAILABLE = False
-    print("Warning: Teloscopy nutrition modules not available, using fallback")
+    print(f"Warning: Teloscopy nutrition modules not available: {e}")
+except Exception as e:
+    REAL_NUTRITION_AVAILABLE = False
+    print(f"Warning: Error loading Teloscopy nutrition modules: {e}")
 
 class NutritionAdvisor:
     """Personalized nutrition planning using Teloscopy real implementation"""
@@ -513,9 +533,13 @@ try:
     from teloscopy_modules.image_agent import ImageAgent
     from teloscopy_modules.nutrition_agent import NutritionAgent
     REAL_AGENTS_AVAILABLE = True
-except ImportError:
+    print("Teloscopy agent modules loaded successfully")
+except ImportError as e:
     REAL_AGENTS_AVAILABLE = False
-    print("Warning: Teloscopy agent modules not available, using fallback")
+    print(f"Warning: Teloscopy agent modules not available: {e}")
+except Exception as e:
+    REAL_AGENTS_AVAILABLE = False
+    print(f"Warning: Error loading Teloscopy agent modules: {e}")
 
 class AgentOrchestrator:
     """Multi-agent system orchestrator using Teloscopy real implementation"""
