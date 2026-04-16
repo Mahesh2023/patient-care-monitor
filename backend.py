@@ -2,18 +2,23 @@
 Patient Care Monitor Backend - FastAPI Server
 ============================================
 Implementing Teloscopy-inspired features with actual functionality
+AND original patient care monitoring functionality
 """
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 import uvicorn
 import numpy as np
 from datetime import datetime
 from typing import List, Dict, Optional
 import json
 import os
+import sys
+
+# Add project root to path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Load Teloscopy data files
 DATA_DIR = "data/json"
@@ -33,6 +38,19 @@ CONDITION_ADVICE = load_json_file("condition_advice.json")
 VARIANT_DB = load_json_file("builtin_variant_db.json")
 AYURVEDIC_REMEDIES = load_json_file("ayurvedic_remedies.json")
 COUNTRY_PROFILES = load_json_file("country_profiles.json")
+
+# Import patient care monitoring modules
+try:
+    from modules.face_analyzer import FaceAnalyzer
+    from modules.pain_detector import PainDetector
+    from modules.rppg_estimator import RPPGEstimator
+    from modules.voice_analyzer import VoiceAnalyzer
+    from modules.text_sentiment import TextSentimentAnalyzer
+    from modules.fusion_engine import FusionEngine
+    PATIENT_MONITORING_AVAILABLE = True
+except ImportError as e:
+    PATIENT_MONITORING_AVAILABLE = False
+    print(f"Warning: Patient monitoring modules not available: {e}")
 
 app = FastAPI(
     title="Patient Care Monitor API",
@@ -713,8 +731,159 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "version": "3.0"
+        "version": "3.0",
+        "patient_monitoring_available": PATIENT_MONITORING_AVAILABLE,
+        "teloscopy_features": {
+            "blood_ranges": bool(BLOOD_RANGES),
+            "condition_rules": bool(CONDITION_RULES),
+            "condition_advice": bool(CONDITION_ADVICE),
+            "variant_db": bool(VARIANT_DB),
+            "ayurvedic_remedies": bool(AYURVEDIC_REMEDIES),
+            "country_profiles": bool(COUNTRY_PROFILES)
+        }
     }
+
+# ==================== PATIENT CARE MONITORING ENDPOINTS ====================
+
+@app.post("/api/patient/analyze-frame")
+async def analyze_patient_frame(file: UploadFile = File(...)):
+    """Analyze a video frame for patient monitoring (face, pain, heart rate)"""
+    if not PATIENT_MONITORING_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Patient monitoring modules not available")
+    
+    try:
+        # Read image file
+        import cv2
+        contents = await file.read()
+        nparr = np.frombuffer(contents, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        
+        if frame is None:
+            raise HTTPException(status_code=400, detail="Invalid image file")
+        
+        # Initialize modules
+        face_analyzer = FaceAnalyzer()
+        pain_detector = PainDetector()
+        rppg_estimator = RPPGEstimator()
+        
+        # Analyze face
+        face_result = face_analyzer.analyze(frame, time.time())
+        
+        # Detect pain
+        pain_assessment = pain_detector.assess(
+            face_result.aus if face_result.face_detected else None,
+            time.time()
+        )
+        
+        # Estimate heart rate
+        heart_rate_result = rppg_estimator.process_frame(frame, face_result.forehead_roi, time.time())
+        
+        return {
+            "success": True,
+            "face_detected": face_result.face_detected,
+            "pain_assessment": {
+                "pspi_score": pain_assessment.pspi_score,
+                "pain_level": pain_assessment.pain_level.value,
+                "confidence": pain_assessment.confidence
+            },
+            "heart_rate": {
+                "bpm": heart_rate_result.bpm if heart_rate_result else None,
+                "confidence": heart_rate_result.confidence if heart_rate_result else None
+            },
+            "action_units": face_result.aus.to_dict() if face_result.aus else {},
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/patient/analyze-voice")
+async def analyze_patient_voice(file: UploadFile = File(...)):
+    """Analyze voice for patient distress detection"""
+    if not PATIENT_MONITORING_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Patient monitoring modules not available")
+    
+    try:
+        # Read audio file
+        contents = await file.read()
+        
+        # Initialize voice analyzer
+        voice_analyzer = VoiceAnalyzer(sample_rate=16000)
+        
+        # Analyze voice (simplified - would need proper audio processing)
+        voice_result = voice_analyzer.analyze_audio(
+            np.frombuffer(contents, dtype=np.float32),
+            time.time()
+        )
+        
+        return {
+            "success": True,
+            "vocal_state": voice_result.vocal_state.value,
+            "arousal": voice_result.arousal,
+            "valence": voice_result.valence,
+            "confidence": voice_result.confidence,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/patient/analyze-text")
+async def analyze_patient_text(text: str):
+    """Analyze text for patient sentiment and distress indicators"""
+    if not PATIENT_MONITORING_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Patient monitoring modules not available")
+    
+    try:
+        # Initialize text analyzer
+        text_analyzer = TextSentimentAnalyzer()
+        
+        # Analyze text
+        sentiment_result = text_analyzer.analyze(text, time.time())
+        
+        return {
+            "success": True,
+            "sentiment": sentiment_result.sentiment,
+            "pain_indicators": sentiment_result.pain_indicators,
+            "distress_indicators": sentiment_result.distress_indicators,
+            "comfort_indicators": sentiment_result.comfort_indicators,
+            "confidence": sentiment_result.confidence,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/patient/fusion-analysis")
+async def fusion_analysis(
+    face_data: Optional[Dict] = None,
+    pain_data: Optional[Dict] = None,
+    voice_data: Optional[Dict] = None,
+    heart_rate_data: Optional[Dict] = None,
+    text_data: Optional[Dict] = None
+):
+    """Perform multimodal fusion analysis for comprehensive patient state"""
+    if not PATIENT_MONITORING_AVAILABLE:
+        raise HTTPException(status_code=503, detail="Patient monitoring modules not available")
+    
+    try:
+        # Initialize fusion engine
+        fusion_engine = FusionEngine()
+        
+        # Create patient state from provided data
+        patient_state = fusion_engine.fuse(
+            face_result=face_data,
+            pain_assessment=pain_data,
+            voice_result=voice_data,
+            heart_rate=heart_rate_data,
+            text_sentiment=text_data,
+            timestamp=time.time()
+        )
+        
+        return {
+            "success": True,
+            "patient_state": patient_state.to_dict(),
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

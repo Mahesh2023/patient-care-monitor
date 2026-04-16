@@ -235,6 +235,119 @@ async function analyzeHealth() {
     }
 }
 
+// Analyze patient frame (webcam)
+async function analyzePatientFrame(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch('/api/patient/analyze-frame', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update patient metrics display
+            const metricsPanel = document.getElementById('patientMetrics');
+            if (metricsPanel) {
+                metricsPanel.innerHTML = `
+                    <div class="metric-card">
+                        <h3>Face Detected</h3>
+                        <p>${data.face_detected ? 'Yes' : 'No'}</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Pain Level</h3>
+                        <p>${data.pain_assessment.pain_level}</p>
+                        <p>PSPI: ${data.pain_assessment.pspi_score.toFixed(2)}</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Heart Rate</h3>
+                        <p>${data.heart_rate.bpm ? data.heart_rate.bpm.toFixed(1) + ' BPM' : 'N/A'}</p>
+                    </div>
+                `;
+            }
+            
+            return data;
+        }
+    } catch (error) {
+        console.error('Error analyzing patient frame:', error);
+        alert('Error analyzing patient frame. Please try again.');
+    }
+}
+
+// Analyze patient voice
+async function analyzePatientVoice(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+        const response = await fetch('/api/patient/analyze-voice', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update voice analysis display
+            const voicePanel = document.getElementById('voiceAnalysis');
+            if (voicePanel) {
+                voicePanel.innerHTML = `
+                    <div class="analysis-result">
+                        <h3>Vocal State</h3>
+                        <p>${data.vocal_state}</p>
+                        <p>Arousal: ${data.arousal.toFixed(2)}</p>
+                        <p>Valence: ${data.valence.toFixed(2)}</p>
+                    </div>
+                `;
+            }
+            
+            return data;
+        }
+    } catch (error) {
+        console.error('Error analyzing patient voice:', error);
+        alert('Error analyzing patient voice. Please try again.');
+    }
+}
+
+// Analyze patient text
+async function analyzePatientText(text) {
+    try {
+        const response = await fetch('/api/patient/analyze-text', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: text })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update text analysis display
+            const textPanel = document.getElementById('textAnalysis');
+            if (textPanel) {
+                textPanel.innerHTML = `
+                    <div class="analysis-result">
+                        <h3>Sentiment</h3>
+                        <p>${data.sentiment}</p>
+                        <p>Pain Indicators: ${data.pain_indicators}</p>
+                        <p>Distress Indicators: ${data.distress_indicators}</p>
+                        <p>Comfort Indicators: ${data.comfort_indicators}</p>
+                    </div>
+                `;
+            }
+            
+            return data;
+        }
+    } catch (error) {
+        console.error('Error analyzing patient text:', error);
+        alert('Error analyzing patient text. Please try again.');
+    }
+}
+
 // Start grounding exercise
 function startGrounding() {
     const steps = [
