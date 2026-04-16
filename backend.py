@@ -7,7 +7,7 @@ Simplified backend to ensure basic functionality works
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from datetime import datetime
 import json
 import os
@@ -45,7 +45,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
+# Mount static files for CSS and JS
 app.mount("/static", StaticFiles(directory="."), name="static")
 
 # ==================== API ENDPOINTS ====================
@@ -58,6 +58,31 @@ async def root():
             return f.read()
     except FileNotFoundError:
         return "<h1>Index.html not found</h1>"
+
+@app.get("/index.html", response_class=HTMLResponse)
+async def get_index():
+    """Serve index.html"""
+    try:
+        with open("index.html", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return "<h1>Index.html not found</h1>"
+
+@app.get("/styles.css")
+async def get_styles():
+    """Serve styles.css"""
+    try:
+        return FileResponse("styles.css", media_type="text/css")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="styles.css not found")
+
+@app.get("/app.js")
+async def get_app_js():
+    """Serve app.js"""
+    try:
+        return FileResponse("app.js", media_type="application/javascript")
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="app.js not found")
 
 @app.post("/api/analyze")
 async def analyze_data(
@@ -159,16 +184,6 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-
-# ==================== API ENDPOINTS ====================
-
-@app.get("/", response_class=HTMLResponse)
-async def root():
-    """Serve the main HTML page"""
-    with open("index.html", "r") as f:
-        return f.read()
-
-@app.post("/api/analyze")
 async def analyze_data(
     age: int,
     gender: str,
