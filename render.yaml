@@ -7,3 +7,4 @@ services:
     envVars:
       - key: PORT
         value: "10000"
+    buildCommand: "echo 'Force rebuild'"
