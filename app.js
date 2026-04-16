@@ -100,19 +100,63 @@ function runAnalysis() {
 }
 
 // Generate meal plan
-function generateMealPlan() {
-    const resultPanel = document.getElementById('mealPlanResult');
-    resultPanel.classList.remove('hidden');
+async function generateMealPlan() {
+    const gender = document.querySelector('select').value;
+    const age = document.querySelectorAll('input[type="number"]')[0].value;
+    const weight = document.querySelectorAll('input[type="number"]')[1].value;
+    const height = document.querySelectorAll('input[type="number"]')[2].value;
+    const activity = document.querySelectorAll('select')[1].value;
+    const goal = document.querySelectorAll('select')[2].value;
+    const region = document.querySelectorAll('select')[3].value;
     
-    // Add animation
-    resultPanel.style.opacity = '0';
-    resultPanel.style.transform = 'translateY(20px)';
+    const restrictions = [];
+    document.querySelectorAll('.tag input:checked').forEach(cb => {
+        restrictions.push(cb.parentElement.textContent.trim());
+    });
     
-    setTimeout(() => {
-        resultPanel.style.transition = 'all 0.5s ease';
-        resultPanel.style.opacity = '1';
-        resultPanel.style.transform = 'translateY(0)';
-    }, 100);
+    try {
+        const response = await fetch('/api/meal-plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                age: parseInt(age),
+                gender: gender,
+                weight: parseFloat(weight),
+                height: parseFloat(height),
+                activity_level: activity,
+                goal: goal,
+                dietary_restrictions: restrictions.join(','),
+                region: region,
+                days: 30
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const resultPanel = document.getElementById('mealPlanResult');
+            resultPanel.classList.remove('hidden');
+            
+            // Update summary
+            const summaryCards = resultPanel.querySelectorAll('.summary-value');
+            summaryCards[0].textContent = data.meal_plan.calorie_target;
+            summaryCards[1].textContent = data.meal_plan.days;
+            
+            resultPanel.style.opacity = '0';
+            resultPanel.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                resultPanel.style.transition = 'all 0.5s ease';
+                resultPanel.style.opacity = '1';
+                resultPanel.style.transform = 'translateY(0)';
+            }, 100);
+        }
+    } catch (error) {
+        console.error('Error generating meal plan:', error);
+        alert('Error generating meal plan. Please try again.');
+    }
 }
 
 // Switch tabs
@@ -135,23 +179,60 @@ function switchTab(tabName) {
 }
 
 // Analyze health checkup
-function analyzeHealth() {
-    const resultPanel = document.getElementById('healthResult');
-    resultPanel.classList.remove('hidden');
+async function analyzeHealth() {
+    const inputs = document.querySelectorAll('.lab-field input');
+    const bloodParams = {};
+    const bloodKeys = ['hemoglobin', 'rbc', 'wbc', 'glucose', 'hba1c', 'cholesterol', 'ldl', 'hdl', 'triglycerides'];
     
-    // Animate score
-    const scoreValue = document.querySelector('.score-value');
-    let currentScore = 0;
-    const targetScore = 85;
-    
-    const interval = setInterval(() => {
-        if (currentScore >= targetScore) {
-            clearInterval(interval);
-        } else {
-            currentScore++;
-            scoreValue.textContent = currentScore;
+    inputs.forEach((input, index) => {
+        if (index < bloodKeys.length) {
+            bloodParams[bloodKeys[index]] = parseFloat(input.value);
         }
-    }, 20);
+    });
+    
+    const gender = document.querySelector('#manualTab select')?.value || 'Male';
+    
+    try {
+        const response = await fetch('/api/health-checkup', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                blood_params: JSON.stringify(bloodParams),
+                urine_params: '{}',
+                gender: gender
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const resultPanel = document.getElementById('healthResult');
+            resultPanel.classList.remove('hidden');
+            
+            // Update health score
+            const scoreValue = document.querySelector('.score-value');
+            const scoreStatus = document.querySelector('.score-status');
+            
+            let currentScore = 0;
+            const targetScore = data.result.health_score;
+            
+            const interval = setInterval(() => {
+                if (currentScore >= targetScore) {
+                    clearInterval(interval);
+                } else {
+                    currentScore++;
+                    scoreValue.textContent = currentScore;
+                }
+            }, 20);
+            
+            scoreStatus.textContent = data.result.health_status;
+        }
+    } catch (error) {
+        console.error('Error analyzing health:', error);
+        alert('Error analyzing health checkup. Please try again.');
+    }
 }
 
 // Start grounding exercise

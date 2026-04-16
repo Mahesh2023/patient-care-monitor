@@ -1,26 +1,40 @@
-FROM nginx:alpine
+FROM python:3.11-slim
 
-# Copy static files
-COPY index.html /usr/share/nginx/html/
-COPY styles.css /usr/share/nginx/html/
-COPY app.js /usr/share/nginx/html/
+WORKDIR /app
 
-# Copy Python backend (optional, for API endpoints)
-COPY requirements.txt /app/
-COPY modules/ /app/modules/
-COPY utils/ /app/utils/
-COPY config.py /app/
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libgomp1 \
+    libegl1 \
+    libgles2 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install Python for backend API
-RUN apk add --no-cache python3 py3-pip
-RUN pip3 install --no-cache-dir -r /app/requirements.txt
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY index.html .
+COPY styles.css .
+COPY app.js .
+COPY backend.py .
+
+# Copy modules
+COPY modules/ ./modules/
+COPY utils/ ./utils/
 
 # Expose port
-ENV PORT=80
-EXPOSE 80
+ENV PORT=8000
+EXPOSE 8000
 
 # Health check
-HEALTHCHECK CMD wget --no-verbose --tries=1 --spider http://localhost/ || exit 1
+HEALTHCHECK CMD curl --fail http://localhost:8000/api/health || exit 1
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Start FastAPI server
+CMD ["uvicorn", "backend:app", "--host", "0.0.0.0", "--port", "8000"]
