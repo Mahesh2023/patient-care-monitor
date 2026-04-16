@@ -7,7 +7,7 @@ Simplified backend to ensure basic functionality works
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
 from datetime import datetime
 import os
 
@@ -47,34 +47,6 @@ async def root():
             return f.read()
     except FileNotFoundError:
         return "<h1>Index.html not found</h1>"
-
-@app.get("/index.html", response_class=HTMLResponse)
-async def get_index():
-    """Serve index.html"""
-    try:
-        html_path = os.path.join(BASE_DIR, "index.html")
-        with open(html_path, "r") as f:
-            return f.read()
-    except FileNotFoundError:
-        return "<h1>Index.html not found</h1>"
-
-@app.get("/styles.css")
-async def get_styles():
-    """Serve styles.css"""
-    try:
-        css_path = os.path.join(BASE_DIR, "styles.css")
-        return FileResponse(css_path, media_type="text/css")
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="styles.css not found")
-
-@app.get("/app.js")
-async def get_app_js():
-    """Serve app.js"""
-    try:
-        js_path = os.path.join(BASE_DIR, "app.js")
-        return FileResponse(js_path, media_type="application/javascript")
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="app.js not found")
 
 @app.post("/api/analyze")
 async def analyze_data(
