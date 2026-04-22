@@ -1,0 +1,27 @@
+# CARE-MM v2.0 dependencies. Pinned to versions known to build on
+# Render free tier (python 3.12, CPU-only).
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+websockets==13.0.1
+python-multipart==0.0.9
+pydantic==2.8.2
+pydantic-settings==2.5.2
+python-dotenv==1.0.1
+
+# Perception
+mediapipe==0.10.33
+opencv-python-headless==4.10.0.84
+numpy==1.26.4
+scipy==1.13.0
+pillow==10.4.0
+
+# LLM
+httpx==0.27.2
+groq==0.11.0
+
+# Observability
+prometheus-client==0.21.0
+
+# Tests
+pytest==8.3.0
+pytest-asyncio==0.24.0
