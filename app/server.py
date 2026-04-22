@@ -260,6 +260,8 @@ async def ws(websocket: WebSocket, session_id: Optional[str] = None):
             b64 = data.get("frame")
             if not b64:
                 continue
+            
+            # Decode video frame
             try:
                 jpeg_bytes = base64.b64decode(b64)
                 frame = cv2.imdecode(np.frombuffer(jpeg_bytes, np.uint8), cv2.IMREAD_COLOR)
@@ -269,8 +271,28 @@ async def ws(websocket: WebSocket, session_id: Optional[str] = None):
                 log.debug(f"decode error: {e}")
                 continue
 
+            # Decode optional audio (base64 encoded WAV)
+            audio_samples = None
+            audio_b64 = data.get("audio")
+            if audio_b64:
+                try:
+                    import wave
+                    import io
+                    audio_bytes = base64.b64decode(audio_b64)
+                    wav_io = io.BytesIO(audio_bytes)
+                    with wave.open(wav_io, 'rb') as wav_file:
+                        frames = wav_file.getnframes()
+                        audio_data = wav_file.readframes(frames)
+                        # Convert to float32 numpy array
+                        audio_samples = np.frombuffer(audio_data, dtype=np.int16).astype(np.float32) / 32768.0
+                except Exception as e:
+                    log.debug(f"audio decode error: {e}")
+
+            # Get optional text input
+            text_input = data.get("text")
+
             t0 = time.time()
-            result = agent.analyze(frame)
+            result = agent.analyze(frame, audio_samples=audio_samples, text_input=text_input)
             dt = time.time() - t0
             if _PROM:
                 _PROM["frames"].labels(session_id=sid).inc()
