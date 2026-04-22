@@ -131,6 +131,7 @@ button:disabled { opacity:.5; cursor: not-allowed; transform: none; box-shadow: 
 .footer a { color: var(--muted); }
 
 .chart-wrap { height: 180px; }
+.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -183,6 +184,19 @@ button:disabled { opacity:.5; cursor: not-allowed; transform: none; box-shadow: 
         <div id="llm">—</div>
       </div>
     </div>
+
+    <div class="card" style="margin-top:18px;">
+      <h2>Debug Info</h2>
+      <div style="font-size:11px; font-family:ui-monospace,monospace; color:var(--muted);">
+        <div>Session ID: <span id="debugSid">—</span></div>
+        <div>Frames received: <span id="debugFrames">0</span></div>
+        <div>Last frame time: <span id="debugTime">—</span></div>
+        <div style="margin-top:8px;">
+          <button class="ghost" onclick="document.getElementById('debugJson').classList.toggle('hidden')">Toggle raw JSON</button>
+        </div>
+        <pre id="debugJson" class="hidden" style="background:rgba(0,0,0,.3); padding:8px; border-radius:6px; max-height:200px; overflow:auto; font-size:10px; margin-top:8px;">waiting for data...</pre>
+      </div>
+    </div>
   </div>
 
   <!-- RIGHT: signals -->
@@ -226,6 +240,37 @@ button:disabled { opacity:.5; cursor: not-allowed; transform: none; box-shadow: 
         <div class="reason">no alerts yet.</div></div>
       </div>
     </div>
+
+    <div class="card" style="margin-top:18px;">
+      <h2>Voice Analysis</h2>
+      <div style="color:var(--muted); font-size:12px;">
+        <div>State: <span id="voiceState" style="color:#fff;">—</span></div>
+        <div>Arousal: <span id="voiceArousal" style="color:#fff;">—</span></div>
+        <div>Valence: <span id="voiceValence" style="color:#fff;">—</span></div>
+        <div>Pitch: <span id="voicePitch" style="color:#fff;">—</span> Hz</div>
+        <div>Confidence: <span id="voiceConf" style="color:#fff;">—</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <h2>Text Sentiment</h2>
+      <div style="color:var(--muted); font-size:12px;">
+        <div>Valence: <span id="textValence" style="color:#fff;">—</span></div>
+        <div>Arousal: <span id="textArousal" style="color:#fff;">—</span></div>
+        <div>Pain mentioned: <span id="textPain" style="color:#fff;">—</span></div>
+        <div>Distress mentioned: <span id="textDistress" style="color:#fff;">—</span></div>
+        <div>Key terms: <span id="textTerms" style="color:#fff;">—</span></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px;">
+      <h2>Caregiver Notes</h2>
+      <textarea id="caregiverNotes" placeholder="Enter caregiver notes here (e.g., 'Patient seems calm, resting well')" 
+                style="width:100%; height:60px; background:rgba(255,255,255,.05); 
+                       border:1px solid #4a6480; border-radius:8px; color:#fff; padding:8px; 
+                       font-family:inherit; font-size:13px; resize:none;"></textarea>
+      <button onclick="sendText()" class="ghost" style="margin-top:8px;">Analyze Text</button>
+    </div>
   </div>
 </div>
 
@@ -246,7 +291,7 @@ const AU_DESC = {
 };
 
 const $ = (id) => document.getElementById(id);
-const state = { session_id:null, ws:null, stream:null, sending:false, lastSent:0 };
+const state = { session_id:null, ws:null, stream:null, sending:false, lastSent:0, frameCount:0 };
 
 const trendData = {
   labels: [],
@@ -274,38 +319,79 @@ async function grantConsent() {
     headers:{"Content-Type":"application/json"},
     body: JSON.stringify({purpose:"clinical_monitoring"})
   });
+  if (!r.ok) {
+    const e = await r.text();
+    console.error("Consent failed:", e);
+    throw new Error("Consent failed: " + e);
+  }
   const j = await r.json();
+  console.log("Consent granted, session:", j.session_id);
   state.session_id = j.session_id;
   return j.session_id;
 }
 
 async function revokeConsent() {
   if (!state.session_id) return;
-  await fetch("/api/consent/revoke",{
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({session_id: state.session_id})
-  });
+  try {
+    await fetch("/api/consent/revoke",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({session_id: state.session_id})
+    });
+    console.log("Consent revoked for session:", state.session_id);
+  } catch(e) {
+    console.error("Revoke failed:", e);
+  }
 }
 
 function connectWS(sid) {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const url = `${proto}://${location.host}/ws?session_id=${encodeURIComponent(sid)}`;
+  console.log("Connecting WebSocket to:", url);
   const ws = new WebSocket(url);
-  ws.onopen = () => { $("status").textContent = "connected"; $("status").classList.add("ok"); };
-  ws.onclose = () => { $("status").textContent = "disconnected"; $("status").classList.remove("ok"); };
-  ws.onerror = () => { $("status").textContent = "error"; $("status").classList.add("bad"); };
+  ws.onopen = () => { 
+    console.log("WebSocket connected");
+    $("status").textContent = "connected"; 
+    $("status").classList.add("ok"); 
+  };
+  ws.onclose = () => { 
+    console.log("WebSocket closed");
+    $("status").textContent = "disconnected"; 
+    $("status").classList.remove("ok"); 
+  };
+  ws.onerror = (e) => { 
+    console.error("WebSocket error:", e);
+    $("status").textContent = "error"; 
+    $("status").classList.add("bad"); 
+  };
   ws.onmessage = (ev) => {
-    const msg = JSON.parse(ev.data);
-    if (msg.type === "frame") render(msg.data);
-    else if (msg.type === "error") { $("status").textContent = msg.code || "error"; $("status").classList.add("bad"); }
+    try {
+      const msg = JSON.parse(ev.data);
+      console.log("WS message type:", msg.type, msg.session_id ? "session:" + msg.session_id.substring(0,8) : "");
+      if (msg.type === "frame") render(msg.data);
+      else if (msg.type === "error") { 
+        console.error("WS error message:", msg);
+        $("status").textContent = msg.code || "error"; 
+        $("status").classList.add("bad"); 
+      }
+    } catch(e) {
+      console.error("Failed to parse WS message:", e, ev.data);
+    }
   };
   return ws;
 }
 
 async function startCamera() {
   const v = $("video");
-  state.stream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:480},height:{ideal:360}},audio:false});
-  v.srcObject = state.stream;
+  console.log("Requesting camera access...");
+  try {
+    state.stream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:480},height:{ideal:360}},audio:false});
+    v.srcObject = state.stream;
+    console.log("Camera stream obtained");
+  } catch(e) {
+    console.error("Camera access denied:", e);
+    alert("Camera access denied. Please allow camera access and refresh the page.");
+    throw e;
+  }
 }
 
 async function streamLoop() {
@@ -314,14 +400,22 @@ async function streamLoop() {
   c.width = 320; c.height = 240;
   const ctx = c.getContext("2d");
   const fpsTarget = 8;
+  let sentCount = 0;
   while (state.sending) {
     if (v.readyState >= 2 && state.ws && state.ws.readyState === WebSocket.OPEN) {
       ctx.drawImage(v, 0, 0, c.width, c.height);
       const jpg = c.toDataURL("image/jpeg", 0.6).split(",")[1];
-      try { state.ws.send(JSON.stringify({frame: jpg, ts: Date.now()})); } catch(e) {}
+      try { 
+        state.ws.send(JSON.stringify({frame: jpg, ts: Date.now()})); 
+        sentCount++;
+        if (sentCount % 30 === 0) console.log("Sent", sentCount, "frames");
+      } catch(e) {
+        console.error("Failed to send frame:", e);
+      }
     }
     await new Promise(r => setTimeout(r, 1000 / fpsTarget));
   }
+  console.log("Stream loop stopped, sent", sentCount, "frames total");
 }
 
 function setLevelClass(el, level) {
@@ -331,8 +425,24 @@ function setLevelClass(el, level) {
 
 function render(d) {
   $("fps").textContent = (d.fps || 0).toFixed(1) + " fps";
+  state.frameCount++;
+  
+  // Debug panel updates
+  $("debugSid").textContent = state.session_id ? state.session_id.substring(0,8) + "..." : "—";
+  $("debugFrames").textContent = state.frameCount;
+  $("debugTime").textContent = new Date().toLocaleTimeString();
+  $("debugJson").textContent = JSON.stringify(d, null, 2);
+  
   if (!d.face_detected) {
-    $("tag").innerHTML = `<span class="tag-chip">no face detected</span>`;
+    $("tag").innerHTML = `<span class="tag-chip" style="color:#f59e0b;border-color:#f59e0b;">no face detected</span>`;
+    $("pspi").textContent = "—";
+    $("painLevel").textContent = "—";
+    $("hr").textContent = "—";
+    $("hrQuality").textContent = "—";
+    $("comfort").textContent = "0.5";
+    $("arousal").textContent = "0.5";
+    $("obs").textContent = "face detection required for full analysis";
+    console.log("No face detected in frame", d);
     return;
   }
 
@@ -385,8 +495,26 @@ function render(d) {
     while (feed.children.length > 20) feed.removeChild(feed.lastChild);
   }
 
-  // LLM
+  // Clinical summary
   if (d.clinical_summary) $("llm").textContent = d.clinical_summary;
+
+  // Voice analysis
+  if (d.voice && d.voice.vocal_state) {
+    $("voiceState").textContent = d.voice.vocal_state;
+    $("voiceArousal").textContent = d.voice.arousal.toFixed(2);
+    $("voiceValence").textContent = d.voice.valence.toFixed(2);
+    $("voicePitch").textContent = d.voice.pitch_mean.toFixed(0);
+    $("voiceConf").textContent = d.voice.confidence.toFixed(2);
+  }
+
+  // Text sentiment
+  if (d.text && d.text.valence !== undefined) {
+    $("textValence").textContent = d.text.valence.toFixed(2);
+    $("textArousal").textContent = d.text.arousal.toFixed(2);
+    $("textPain").textContent = d.text.pain_mentioned ? "yes" : "no";
+    $("textDistress").textContent = d.text.distress_mentioned ? "yes" : "no";
+    $("textTerms").textContent = d.text.key_terms ? d.text.key_terms.join(", ") : "—";
+  }
 
   // Trend
   const t = new Date().toLocaleTimeString().split(" ")[0];
@@ -404,26 +532,55 @@ function render(d) {
 $("startBtn").onclick = async () => {
   try {
     $("startBtn").disabled = true;
+    console.log("Starting session...");
     const sid = await grantConsent();
+    state.session_id = sid;
+    $("debugSid").textContent = sid.substring(0,8) + "...";
     await startCamera();
     state.ws = connectWS(sid);
     state.sending = true;
     streamLoop();
     $("stopBtn").disabled = false;
+    console.log("Session started successfully");
   } catch (e) {
+    console.error("Session start failed:", e);
     alert("Camera / consent failed: " + e.message);
     $("startBtn").disabled = false;
   }
 };
 $("stopBtn").onclick = async () => {
+  console.log("Stopping session...");
   state.sending = false;
   if (state.ws) state.ws.close();
   if (state.stream) state.stream.getTracks().forEach(t => t.stop());
   await revokeConsent();
+  state.frameCount = 0;
+  $("debugFrames").textContent = "0";
+  $("debugSid").textContent = "—";
+  $("debugJson").textContent = "session stopped";
   $("startBtn").disabled = false;
   $("stopBtn").disabled = true;
   $("status").textContent = "revoked";
+  console.log("Session stopped");
 };
+
+function sendText() {
+  const notes = $("caregiverNotes").value.trim();
+  if (!notes || !state.ws || state.ws.readyState !== WebSocket.OPEN) return;
+  
+  // Send with next frame (include empty frame to trigger analysis with text)
+  const v = $("video");
+  if (v.readyState >= 2) {
+    const c = document.createElement("canvas");
+    c.width = 320; c.height = 240;
+    const ctx = c.getContext("2d");
+    ctx.drawImage(v, 0, 0, c.width, c.height);
+    const jpg = c.toDataURL("image/jpeg", 0.6).split(",")[1];
+    state.ws.send(JSON.stringify({frame: jpg, text: notes}));
+    $("caregiverNotes").value = "";
+    console.log("Sent text analysis request");
+  }
+}
 </script>
 </body>
 </html>
