@@ -1,10 +1,25 @@
+# Render blueprint — single-service, Docker build.
+# Deploy: push to GitHub → Render → New → Blueprint → pick this repo.
 services:
   - type: web
-    name: patient-care-monitor
-    runtime: python
+    name: care-mm
+    runtime: docker
     plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "streamlit run dashboard.py --server.port $PORT --server.address 0.0.0.0 --server.headless true"
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    # NOTE: Do NOT set PORT here. Render injects it automatically and the
+    # Dockerfile's CMD uses ${PORT:-8000}, so it "just works" both locally
+    # and on Render.
     envVars:
-      - key: PORT
-        value: "8501"
+      - key: LLM_PROVIDER
+        value: groq
+      - key: LLM_MODEL
+        value: llama-3.3-70b-versatile
+      - key: GROQ_API_KEY
+        sync: false           # set in Render dashboard; never committed
+      - key: ENABLE_LLM_REASONING
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: MODEL_DIR
+        value: /app/models    # matches the Dockerfile pre-download location
