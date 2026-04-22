@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src ./src
 COPY app ./app
+COPY modules ./modules
 
 # Pre-download MediaPipe model at build time so cold-start does NOT
 # depend on runtime outbound network access. Saves to /app/models/.
