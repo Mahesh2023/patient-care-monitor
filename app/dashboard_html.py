@@ -265,9 +265,14 @@ button:disabled { opacity:.5; cursor: not-allowed; transform: none; box-shadow: 
 
     <div class="card" style="margin-top:18px;">
       <h2>Caregiver Notes</h2>
-      <textarea id="caregiverNotes" placeholder="Enter caregiver notes here (e.g., 'Patient seems calm, resting well')" 
-                style="width:100%; height:60px; background:rgba(255,255,255,.05); 
-                       border:1px solid #4a6480; border-radius:8px; color:#fff; padding:8px; 
+      <div style="color:var(--muted); font-size:11px; margin-bottom:8px;">
+        Free-text observations run through the text-sentiment module (pain/distress
+        keywords, valence, arousal). Type and click <b>Analyze Text</b> to populate
+        the Text Sentiment panel above.
+      </div>
+      <textarea id="caregiverNotes" placeholder="Enter caregiver notes here (e.g., 'Patient seems calm, resting well')"
+                style="width:100%; height:60px; background:rgba(255,255,255,.05);
+                       border:1px solid #4a6480; border-radius:8px; color:#fff; padding:8px;
                        font-family:inherit; font-size:13px; resize:none;"></textarea>
       <button onclick="sendText()" class="ghost" style="margin-top:8px;">Analyze Text</button>
     </div>
@@ -291,7 +296,16 @@ const AU_DESC = {
 };
 
 const $ = (id) => document.getElementById(id);
-const state = { session_id:null, ws:null, stream:null, sending:false, lastSent:0, frameCount:0 };
+const state = {
+  session_id:null, ws:null, stream:null, sending:false, lastSent:0, frameCount:0,
+  // audio pipeline
+  audioCtx:null, audioSource:null, audioProc:null,
+  audioBuf:[], audioBufLen:0,     // Float32 samples pending at native rate
+  audioNativeRate: 48000,          // will be overwritten with real rate on start
+  pendingAudioB64: null,           // base64 WAV ready to piggy-back on next frame
+};
+const AUDIO_TARGET_RATE = 16000;   // must match VoiceAnalyzer(sample_rate=16000)
+const AUDIO_CHUNK_SEC = 1.0;       // window length shipped to server
 
 const trendData = {
   labels: [],
@@ -382,16 +396,134 @@ function connectWS(sid) {
 
 async function startCamera() {
   const v = $("video");
-  console.log("Requesting camera access...");
+  console.log("Requesting camera + mic access...");
+  // Try camera+mic; fall back to camera-only so face pipeline still works.
   try {
-    state.stream = await navigator.mediaDevices.getUserMedia({video:{width:{ideal:480},height:{ideal:360}},audio:false});
-    v.srcObject = state.stream;
-    console.log("Camera stream obtained");
+    state.stream = await navigator.mediaDevices.getUserMedia({
+      video: { width:{ideal:480}, height:{ideal:360} },
+      audio: { channelCount: 1, sampleRate: 16000, echoCancellation: true, noiseSuppression: true }
+    });
+    console.log("Camera + mic stream obtained");
   } catch(e) {
-    console.error("Camera access denied:", e);
-    alert("Camera access denied. Please allow camera access and refresh the page.");
-    throw e;
+    console.warn("Mic access failed, retrying video-only:", e);
+    try {
+      state.stream = await navigator.mediaDevices.getUserMedia({
+        video:{width:{ideal:480},height:{ideal:360}}, audio:false
+      });
+      console.log("Camera-only stream obtained (Voice Analysis will stay empty)");
+    } catch(e2) {
+      console.error("Camera access denied:", e2);
+      alert("Camera access denied. Please allow camera access and refresh the page.");
+      throw e2;
+    }
   }
+  v.srcObject = state.stream;
+
+  // ---- audio pipeline ----
+  const audioTracks = state.stream.getAudioTracks();
+  if (audioTracks.length > 0) {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      state.audioCtx = new AC();
+      state.audioNativeRate = state.audioCtx.sampleRate;
+      console.log("AudioContext sample rate:", state.audioNativeRate);
+      state.audioSource = state.audioCtx.createMediaStreamSource(state.stream);
+      // ScriptProcessorNode is deprecated but ubiquitously supported and
+      // avoids shipping a separate AudioWorklet .js file from this single-page app.
+      state.audioProc = state.audioCtx.createScriptProcessor(4096, 1, 1);
+      state.audioBuf = [];
+      state.audioBufLen = 0;
+      const nativeChunkSamples = Math.round(AUDIO_CHUNK_SEC * state.audioNativeRate);
+      state.audioProc.onaudioprocess = (ev) => {
+        const input = ev.inputBuffer.getChannelData(0);
+        // Copy — the underlying buffer is reused by the audio thread.
+        state.audioBuf.push(new Float32Array(input));
+        state.audioBufLen += input.length;
+        if (state.audioBufLen >= nativeChunkSamples) {
+          // Flatten
+          const merged = new Float32Array(state.audioBufLen);
+          let off = 0;
+          for (const chunk of state.audioBuf) { merged.set(chunk, off); off += chunk.length; }
+          state.audioBuf = [];
+          state.audioBufLen = 0;
+          // Downsample to 16 kHz (linear interp)
+          const resampled = resampleLinear(merged, state.audioNativeRate, AUDIO_TARGET_RATE);
+          const wav = encodeWAV(floatTo16BitPCM(resampled), AUDIO_TARGET_RATE);
+          state.pendingAudioB64 = bufToBase64(wav);
+        }
+      };
+      state.audioSource.connect(state.audioProc);
+      // Must connect to destination to actually run — send to a muted gain to
+      // avoid feedback.
+      const sink = state.audioCtx.createGain();
+      sink.gain.value = 0.0;
+      state.audioProc.connect(sink);
+      sink.connect(state.audioCtx.destination);
+    } catch (e) {
+      console.warn("Audio pipeline init failed:", e);
+    }
+  } else {
+    console.log("No audio track — Voice Analysis panel will remain empty.");
+  }
+}
+
+// ---- audio helpers ----
+function resampleLinear(samples, fromRate, toRate) {
+  if (fromRate === toRate) return samples;
+  const ratio = fromRate / toRate;
+  const outLen = Math.floor(samples.length / ratio);
+  const out = new Float32Array(outLen);
+  for (let i = 0; i < outLen; i++) {
+    const src = i * ratio;
+    const i0 = Math.floor(src);
+    const i1 = Math.min(i0 + 1, samples.length - 1);
+    const t = src - i0;
+    out[i] = samples[i0] * (1 - t) + samples[i1] * t;
+  }
+  return out;
+}
+
+function floatTo16BitPCM(input) {
+  const out = new Int16Array(input.length);
+  for (let i = 0; i < input.length; i++) {
+    const s = Math.max(-1, Math.min(1, input[i]));
+    out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+  }
+  return out;
+}
+
+function encodeWAV(samples, sampleRate) {
+  const bytes = samples.length * 2;
+  const buffer = new ArrayBuffer(44 + bytes);
+  const view = new DataView(buffer);
+  const writeString = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  writeString(0, "RIFF");
+  view.setUint32(4, 36 + bytes, true);
+  writeString(8, "WAVE");
+  writeString(12, "fmt ");
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);         // PCM
+  view.setUint16(22, 1, true);         // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, "data");
+  view.setUint32(40, bytes, true);
+  let off = 44;
+  for (let i = 0; i < samples.length; i++, off += 2) view.setInt16(off, samples[i], true);
+  return buffer;
+}
+
+function bufToBase64(buf) {
+  const bytes = new Uint8Array(buf);
+  // Chunked to avoid stack overflow on large buffers.
+  let bin = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(bin);
 }
 
 async function streamLoop() {
@@ -405,8 +537,14 @@ async function streamLoop() {
     if (v.readyState >= 2 && state.ws && state.ws.readyState === WebSocket.OPEN) {
       ctx.drawImage(v, 0, 0, c.width, c.height);
       const jpg = c.toDataURL("image/jpeg", 0.6).split(",")[1];
-      try { 
-        state.ws.send(JSON.stringify({frame: jpg, ts: Date.now()})); 
+      const payload = { frame: jpg, ts: Date.now() };
+      // Attach one buffered 1 s WAV chunk if the audio worker produced one.
+      if (state.pendingAudioB64) {
+        payload.audio = state.pendingAudioB64;
+        state.pendingAudioB64 = null;
+      }
+      try {
+        state.ws.send(JSON.stringify(payload));
         sentCount++;
         if (sentCount % 30 === 0) console.log("Sent", sentCount, "frames");
       } catch(e) {
@@ -423,6 +561,28 @@ function setLevelClass(el, level) {
   el.classList.add("level-" + (level || "normal"));
 }
 
+// Update Voice + Text panels. Called on every frame independent of face
+// detection so the audio and caregiver-notes pipelines are never masked
+// by the perception layer.
+function renderVoiceAndText(d) {
+  if (d.voice && d.voice.vocal_state) {
+    $("voiceState").textContent = d.voice.vocal_state;
+    $("voiceArousal").textContent = (d.voice.arousal ?? 0).toFixed(2);
+    $("voiceValence").textContent = (d.voice.valence ?? 0).toFixed(2);
+    $("voicePitch").textContent = (d.voice.pitch_mean ?? 0).toFixed(0);
+    $("voiceConf").textContent = (d.voice.confidence ?? 0).toFixed(2);
+  }
+  if (d.text && d.text.valence !== undefined) {
+    $("textValence").textContent = d.text.valence.toFixed(2);
+    $("textArousal").textContent = d.text.arousal.toFixed(2);
+    $("textPain").textContent = d.text.pain_mentioned ? "yes" : "no";
+    $("textDistress").textContent = d.text.distress_mentioned ? "yes" : "no";
+    $("textTerms").textContent = (d.text.key_terms && d.text.key_terms.length)
+      ? d.text.key_terms.join(", ") : "—";
+    console.log("Text sentiment updated:", d.text);
+  }
+}
+
 function render(d) {
   $("fps").textContent = (d.fps || 0).toFixed(1) + " fps";
   state.frameCount++;
@@ -433,6 +593,10 @@ function render(d) {
   $("debugTime").textContent = new Date().toLocaleTimeString();
   $("debugJson").textContent = JSON.stringify(d, null, 2);
   
+  // Voice and Text panels are independent of face detection — always update them
+  // when the server returned data.
+  renderVoiceAndText(d);
+
   if (!d.face_detected) {
     $("tag").innerHTML = `<span class="tag-chip" style="color:#f59e0b;border-color:#f59e0b;">no face detected</span>`;
     $("pspi").textContent = "—";
@@ -498,24 +662,6 @@ function render(d) {
   // Clinical summary
   if (d.clinical_summary) $("llm").textContent = d.clinical_summary;
 
-  // Voice analysis
-  if (d.voice && d.voice.vocal_state) {
-    $("voiceState").textContent = d.voice.vocal_state;
-    $("voiceArousal").textContent = d.voice.arousal.toFixed(2);
-    $("voiceValence").textContent = d.voice.valence.toFixed(2);
-    $("voicePitch").textContent = d.voice.pitch_mean.toFixed(0);
-    $("voiceConf").textContent = d.voice.confidence.toFixed(2);
-  }
-
-  // Text sentiment
-  if (d.text && d.text.valence !== undefined) {
-    $("textValence").textContent = d.text.valence.toFixed(2);
-    $("textArousal").textContent = d.text.arousal.toFixed(2);
-    $("textPain").textContent = d.text.pain_mentioned ? "yes" : "no";
-    $("textDistress").textContent = d.text.distress_mentioned ? "yes" : "no";
-    $("textTerms").textContent = d.text.key_terms ? d.text.key_terms.join(", ") : "—";
-  }
-
   // Trend
   const t = new Date().toLocaleTimeString().split(" ")[0];
   trendData.labels.push(t);
@@ -553,6 +699,14 @@ $("stopBtn").onclick = async () => {
   state.sending = false;
   if (state.ws) state.ws.close();
   if (state.stream) state.stream.getTracks().forEach(t => t.stop());
+  // Tear down audio pipeline
+  try {
+    if (state.audioProc) { state.audioProc.disconnect(); state.audioProc.onaudioprocess = null; }
+    if (state.audioSource) state.audioSource.disconnect();
+    if (state.audioCtx) await state.audioCtx.close();
+  } catch (e) { console.warn("Audio teardown warn:", e); }
+  state.audioProc = state.audioSource = state.audioCtx = null;
+  state.audioBuf = []; state.audioBufLen = 0; state.pendingAudioB64 = null;
   await revokeConsent();
   state.frameCount = 0;
   $("debugFrames").textContent = "0";

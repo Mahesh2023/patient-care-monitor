@@ -157,9 +157,21 @@ class CareMonitorAgent:
             mp_result = self.perception.process(frame_bgr, ts_ms)
         except Exception as e:
             log.error(f"Perception error on frame {self._frame_count}: {e}")
-            return result
+            mp_result = None
 
-        if not mp_result.face_landmarks:
+        # Always run modality-independent analyses (voice / text) even when
+        # no face is detected — otherwise the frontend Text-Sentiment and
+        # Voice-Analysis panels can never populate unless a face is in-frame.
+        if audio_samples is not None:
+            v = self.analyze_audio(audio_samples, result.ts)
+            if v:
+                result.voice = v
+        if text_input is not None and text_input.strip():
+            t = self.analyze_text(text_input, result.ts)
+            if t:
+                result.text = t
+
+        if not mp_result or not mp_result.face_landmarks:
             return result
         result.face_detected = True
         landmarks = mp_result.face_landmarks[0]
@@ -206,29 +218,13 @@ class CareMonitorAgent:
                 "abnormality": hr_result.abnormality,
             }
 
-        # --- voice analysis (optional) ---
-        voice_arousal = 0.5
-        voice_valence = 0.5
-        if audio_samples is not None:
-            voice_result = self.analyze_audio(audio_samples, result.ts)
-            if voice_result:
-                result.voice = voice_result
-                voice_arousal = voice_result.get("arousal", 0.5)
-                voice_valence = voice_result.get("valence", 0.5)
-
-        # --- text sentiment (optional) ---
-        text_arousal = 0.5
-        text_valence = 0.5
-        text_pain_mentioned = False
-        text_distress_mentioned = False
-        if text_input is not None and text_input.strip():
-            text_result = self.analyze_text(text_input, result.ts)
-            if text_result:
-                result.text = text_result
-                text_arousal = text_result.get("arousal", 0.5)
-                text_valence = text_result.get("valence", 0.5)
-                text_pain_mentioned = text_result.get("pain_mentioned", False)
-                text_distress_mentioned = text_result.get("distress_mentioned", False)
+        # --- voice / text already computed at top of analyze(); read back for fusion ---
+        voice_arousal = result.voice.get("arousal", 0.5) if result.voice else 0.5
+        voice_valence = result.voice.get("valence", 0.5) if result.voice else 0.5
+        text_arousal = result.text.get("arousal", 0.5) if result.text else 0.5
+        text_valence = result.text.get("valence", 0.5) if result.text else 0.5
+        text_pain_mentioned = result.text.get("pain_mentioned", False) if result.text else False
+        text_distress_mentioned = result.text.get("distress_mentioned", False) if result.text else False
 
         # --- dimensional distress state (incorporating voice/text) ---
         distress = infer_distress(
