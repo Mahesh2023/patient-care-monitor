@@ -7,6 +7,7 @@ Keep that below the Postgres plan's connection limit (or front with PgBouncer).
 """
 from __future__ import annotations
 
+import contextlib
 from collections.abc import AsyncIterator
 
 from sqlalchemy import event
@@ -38,7 +39,12 @@ if settings.is_sqlite:
     @event.listens_for(engine.sync_engine, "connect")
     def _sqlite_fk(dbapi_conn, _):  # enforce ON DELETE CASCADE like Postgres
         cur = dbapi_conn.cursor()
+        cur.execute("PRAGMA busy_timeout=5000")  # first, so the pragmas below wait instead of failing
         cur.execute("PRAGMA foreign_keys=ON")
+        # Persistent; readers don't block the (audit) writer. Another worker may be switching it
+        # concurrently at startup — WAL ends up set either way, so a lock error here is harmless.
+        with contextlib.suppress(Exception):
+            cur.execute("PRAGMA journal_mode=WAL")
         cur.close()
 
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)

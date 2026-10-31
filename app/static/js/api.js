@@ -44,10 +44,20 @@ export async function api(path, { method = "GET", body, retry = true } = {}) {
   return parse(r);
 }
 
+/** Returns null when signed in, or an MFA token when a second factor is required. */
 export async function login(email, password) {
   const t = await api("/api/auth/login", { method: "POST", body: { email, password } });
+  if (t.mfa_required) return t.mfa_token;
+  accessToken = t.access_token;
+  return null;
+}
+
+export async function verifyMfa(mfa_token, code) {
+  const t = await api("/api/auth/2fa/verify", { method: "POST", body: { mfa_token, code } });
   accessToken = t.access_token;
 }
+
+export function clearToken() { accessToken = null; }
 
 export async function register(email, password, full_name) {
   const t = await api("/api/auth/register", { method: "POST", body: { email, password, full_name } });

@@ -209,8 +209,38 @@ def test_alerts_require_consecutive_frames():
     assert eng.evaluate(d, pain, hr=None) == []
     fired = eng.evaluate(d, pain, hr=None)
     assert len(fired) == 1
-    assert fired[0].level == AlertLevel.URGENT
+    # Facial evidence alone -> CONCERN (smart-alarm corroboration rule)
+    assert fired[0].level == AlertLevel.CONCERN
     assert fired[0].key == "severe_pain"
+    assert "verify" in fired[0].reason
+
+
+def test_severe_pain_corroborated_by_voice_is_urgent():
+    eng = AlertEngine(cooldown_s=0.0, consecutive=1)
+    from src.care_monitor.inference.distress_state import DistressState
+    fired = eng.evaluate(DistressState(comfort=0.5, confidence=0.8), _make_severe_pain_assessment(),
+                         hr=None, vocal_distress=True)
+    sev = [a for a in fired if a.key == "severe_pain"]
+    assert sev and sev[0].level == AlertLevel.URGENT and "vocal distress" in sev[0].reason
+
+
+def test_facial_alerts_gated_by_quality_and_calibration():
+    eng = AlertEngine(cooldown_s=0.0, consecutive=1)
+    from src.care_monitor.inference.distress_state import DistressState
+    d, pain = DistressState(comfort=0.1, confidence=0.9), _make_severe_pain_assessment()
+    assert eng.evaluate(d, pain, hr=None, quality_ok=False) == []
+    assert eng.evaluate(d, pain, hr=None, calibrating=True) == []
+    assert eng.evaluate(d, pain, hr=None)
+
+
+def test_muted_alert_keys_and_per_patient_settings():
+    from src.care_monitor.inference.alerts import AlertSettings
+    from src.care_monitor.inference.distress_state import DistressState
+    cfg = AlertSettings.from_dict({"muted": ["severe_pain"], "consecutive": 1, "cooldown_s": 0, "hr_high": 90})
+    assert cfg.hr_high == 90.0 and cfg.consecutive == 1
+    eng = AlertEngine(config=cfg)
+    fired = eng.evaluate(DistressState(comfort=0.5, confidence=0.8), _make_severe_pain_assessment(), hr=None)
+    assert all(a.key != "severe_pain" for a in fired)
 
 
 def test_alerts_respect_cooldown():

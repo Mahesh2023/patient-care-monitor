@@ -15,7 +15,7 @@ from src.care_monitor.config import settings
 from .core.db import get_db
 from .core.kv import kv
 from .core.security import TokenError, decode_token
-from .models import Patient, User
+from .models import Patient, PatientMember, User
 
 DB = Annotated[AsyncSession, Depends(get_db)]
 _bearer = HTTPBearer(auto_error=False)
@@ -61,8 +61,34 @@ async def current_user(
 CurrentUser = Annotated[User, Depends(current_user)]
 
 
-async def owned_patient(db: AsyncSession, user: User, patient_id: uuid.UUID) -> Patient:
+# Care-team roles (least privilege):
+#   viewer  read patient data, live alert watch
+#   editor  + start monitoring, acknowledge alerts, PAINAD assessments, care events
+#   owner   + edit/delete patient, alert settings, team management, export, access log
+ROLE_RANK = {"viewer": 1, "editor": 2, "owner": 3}
+
+
+async def role_for(db: AsyncSession, user_id: uuid.UUID, patient: Patient) -> str | None:
+    if patient.owner_id == user_id:
+        return "owner"
+    m = await db.get(PatientMember, (patient.id, user_id))
+    return m.role if m else None
+
+
+async def patient_access(db: AsyncSession, user: User, patient_id: uuid.UUID,
+                         min_role: str = "viewer") -> tuple[Patient, str]:
+    """Return (patient, role) or 404 (no access) / 403 (insufficient role).
+
+    404 for no access at all avoids disclosing that a patient id exists.
+    """
     p = await db.get(Patient, patient_id)
-    if p is None or p.owner_id != user.id:
+    role = await role_for(db, user.id, p) if p else None
+    if role is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "patient not found")
-    return p
+    if ROLE_RANK[role] < ROLE_RANK[min_role]:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, f"requires {min_role} role")
+    return p, role
+
+
+async def owned_patient(db: AsyncSession, user: User, patient_id: uuid.UUID) -> Patient:
+    return (await patient_access(db, user, patient_id, "owner"))[0]

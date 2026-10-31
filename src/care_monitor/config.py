@@ -19,7 +19,7 @@ class Settings(BaseSettings):
 
     # App
     environment: Literal["development", "production", "test"] = "development"
-    app_version: str = "3.0.0"
+    app_version: str = "3.1.0"
     public_base_url: str = ""  # e.g. https://care-mm.onrender.com (informational)
 
     # Data stores
@@ -40,6 +40,14 @@ class Settings(BaseSettings):
     # Rate limits (per client IP / user, fixed 60 s window)
     auth_rate_per_minute: int = 10
     api_rate_per_minute: int = 240
+
+    # Account protection (OWASP ASVS V6 / NIST SP 800-63B)
+    login_max_failures: int = 10          # per account per lockout window (soft lockout)
+    login_lockout_seconds: int = 900
+    hibp_enabled: bool = True             # Pwned Passwords k-anonymity range API (fail-open)
+    mfa_token_ttl_seconds: int = 300
+    data_encryption_key: str = ""         # AES-GCM key material for secrets at rest (TOTP)
+    audit_retention_days: int = 2190      # 6 years (HIPAA documentation retention)
 
     # LLM
     llm_provider: Literal["groq", "ollama", "none"] = "groq"
@@ -67,11 +75,21 @@ class Settings(BaseSettings):
     alert_cooldown_seconds: float = 30.0
     alert_consecutive_frames: int = 5
 
-    # rPPG
+    alert_escalation_urgent_minutes: float = 5.0
+    alert_escalation_concern_minutes: float = 15.0
+    escalation_interval_seconds: int = 30
+
+    # Vital signs (rPPG = POS method) / respiration
     rppg_resample_hz: float = 15.0
     rppg_window_seconds: float = 20.0
     rppg_bandpass_low_hz: float = 0.7
     rppg_bandpass_high_hz: float = 4.0
+    rr_window_seconds: float = 32.0
+
+    # Per-patient neutral-face calibration
+    baseline_seconds: float = 20.0
+    baseline_min_samples: int = 40
+    baseline_cap: float = 0.30
 
     # Privacy / retention
     consent_ttl_hours: int = 24
@@ -122,6 +140,8 @@ class Settings(BaseSettings):
             return problems
         if len(self.jwt_secret) < 32:
             problems.append("JWT_SECRET must be set (>= 32 chars) in production")
+        if len(self.data_encryption_key) < 32:
+            problems.append("DATA_ENCRYPTION_KEY must be set (>= 32 chars) in production")
         if self.is_sqlite:
             problems.append("DATABASE_URL must point to Postgres in production")
         if not self.cookie_secure:

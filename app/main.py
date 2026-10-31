@@ -17,11 +17,11 @@ from src.care_monitor.config import settings
 from src.care_monitor.inference.llm_reasoner import get_reasoner
 from src.care_monitor.logging_utils import get_logger
 
-from .api import auth, health, patients, sessions, ws
+from .api import auth, care, health, patients, sessions, ws
 from .core.db import Base, engine
 from .core.kv import kv
 from .core.middleware import AppMiddleware
-from .services.maintenance import maintenance_loop
+from .services.maintenance import escalation_loop, maintenance_loop
 
 log = get_logger(__name__)
 STATIC_DIR = Path(__file__).parent / "static"
@@ -53,15 +53,16 @@ async def lifespan(app: FastAPI):
         async with engine.begin() as conn:  # dev/test convenience; prod uses Alembic
             await conn.run_sync(Base.metadata.create_all)
     await kv.start()
-    task = asyncio.create_task(maintenance_loop())
+    tasks = [asyncio.create_task(maintenance_loop()), asyncio.create_task(escalation_loop())]
     log.info("CARE-MM %s started (env=%s, kv=%s, llm=%s)", settings.app_version,
              settings.environment, kv.backend, get_reasoner().available())
     try:
         yield
     finally:
-        task.cancel()
-        with contextlib.suppress(BaseException):
-            await task
+        for task in tasks:
+            task.cancel()
+            with contextlib.suppress(BaseException):
+                await task
         await get_reasoner().aclose()
         await kv.close()
         await engine.dispose()
@@ -85,7 +86,7 @@ def create_app() -> FastAPI:
                            allow_headers=["Authorization", "Content-Type"])
     app.add_middleware(AppMiddleware)
 
-    for r in (health.router, auth.router, patients.router, sessions.router, ws.router):
+    for r in (health.router, auth.router, patients.router, care.router, sessions.router, ws.router):
         app.include_router(r)
 
     app.mount("/static", CachedStatic(directory=STATIC_DIR), name="static")
@@ -93,6 +94,17 @@ def create_app() -> FastAPI:
     @app.get("/", include_in_schema=False)
     async def index() -> FileResponse:
         return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
+
+    # PWA: the service worker must be served from the root to control scope "/".
+    @app.get("/sw.js", include_in_schema=False)
+    async def service_worker() -> FileResponse:
+        return FileResponse(STATIC_DIR / "sw.js", media_type="text/javascript",
+                            headers={"Cache-Control": "no-cache", "Service-Worker-Allowed": "/"})
+
+    @app.get("/manifest.webmanifest", include_in_schema=False)
+    async def manifest() -> FileResponse:
+        return FileResponse(STATIC_DIR / "manifest.webmanifest", media_type="application/manifest+json",
+                            headers={"Cache-Control": "public, max-age=3600"})
 
     return app
 

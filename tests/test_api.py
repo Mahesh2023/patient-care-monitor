@@ -229,7 +229,8 @@ def test_account_deletion_cascades(client, user):
 def test_maintenance_run_once(client):
     from app.services.maintenance import run_once
     stats = client.portal.call(run_once)  # run on the app's event loop
-    assert set(stats) == {"metrics_deleted", "alerts_deleted", "tokens_deleted", "sessions_expired"}
+    assert set(stats) == {"metrics_deleted", "alerts_deleted", "tokens_deleted", "audit_deleted",
+                          "sessions_expired"}
 
 
 def test_unknown_uuid_404(client, user):

@@ -56,6 +56,7 @@ jobs:
           docker run -d --name app --network t -p 8000:8000 \
             -e DATABASE_URL=postgresql://care:care@pg:5432/care_mm \
             -e JWT_SECRET=ci-secret-0123456789-0123456789-0123456789 \
+            -e DATA_ENCRYPTION_KEY=ci-dek-0123456789-0123456789-0123456789 \
             -e ENABLE_LLM_REASONING=false care-mm:ci
           for i in $(seq 1 40); do curl -fsS localhost:8000/ready && exit 0; sleep 1; done
           docker logs app; exit 1

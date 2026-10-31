@@ -4,9 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CARE-MM · Patient Care Monitor</title>
-  <link rel="stylesheet" href="/static/css/app.css?v=3.0.0">
+  <meta name="theme-color" content="#121a33">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="stylesheet" href="/static/css/app.css?v=3.1.0">
   <script src="/static/vendor/chart.umd.min.js" defer></script>
-  <script type="module" src="/static/js/app.js?v=3.0.0"></script>
+  <script type="module" src="/static/js/app.js?v=3.1.0"></script>
 </head>
 <body>
   <noscript>CARE-MM requires JavaScript.</noscript>
@@ -35,6 +39,16 @@
         <button type="submit" class="btn primary" id="auth-submit">Sign in</button>
         <p id="auth-error" class="error" role="alert"></p>
       </form>
+      <form id="form-mfa" class="hidden" autocomplete="off" novalidate>
+        <p class="small">Two-factor authentication is enabled. Enter the 6-digit code from your authenticator app,
+          or one of your recovery codes.</p>
+        <label>Verification code
+          <input name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="32" required>
+        </label>
+        <button type="submit" class="btn primary">Verify</button>
+        <button type="button" class="btn ghost" id="mfa-cancel">Back</button>
+        <p id="mfa-error" class="error" role="alert"></p>
+      </form>
       <p class="disclaimer">Research / educational use only. Not FDA-approved. Not a medical device.</p>
     </div>
   </section>
@@ -46,6 +60,7 @@
       <div class="topbar-right">
         <span id="conn-status" class="pill">idle</span>
         <span id="user-email" class="muted"></span>
+        <button id="btn-account" class="btn ghost">Account &amp; security</button>
         <button id="btn-logout" class="btn ghost">Sign out</button>
       </div>
     </header>
@@ -64,13 +79,62 @@
       <main class="main">
         <div id="empty-state" class="card center muted">Select or add a patient to begin.</div>
 
+        <!-- ACCOUNT & SECURITY -->
+        <div id="account-panel" class="hidden">
+          <div class="panel-head"><h2>Account &amp; security</h2>
+            <button id="btn-account-close" class="btn ghost">Close</button></div>
+          <div class="grid">
+            <div class="card">
+              <h3>Two-factor authentication</h3>
+              <p id="mfa-status" class="small muted"></p>
+              <div id="mfa-setup-box" class="hidden stack">
+                <p class="small">Add this key to an authenticator app (Google Authenticator, Microsoft Authenticator,
+                  1Password, Authy…) using “enter a setup key”, then enter the 6-digit code it shows.</p>
+                <code id="mfa-secret" class="secret"></code>
+                <details class="small"><summary>otpauth URI</summary><code id="mfa-uri" class="secret"></code></details>
+                <form id="form-mfa-enable" class="row">
+                  <input name="code" inputmode="numeric" maxlength="6" placeholder="123456" required>
+                  <button class="btn primary" type="submit">Enable</button>
+                </form>
+              </div>
+              <div id="mfa-codes-box" class="hidden">
+                <p class="small"><strong>Save these one-time recovery codes now.</strong> They will not be shown again.</p>
+                <pre id="mfa-codes" class="secret"></pre>
+              </div>
+              <div class="row">
+                <button id="btn-mfa-setup" class="btn">Set up 2FA</button>
+              </div>
+              <form id="form-mfa-disable" class="stack hidden">
+                <input name="password" type="password" placeholder="Current password" autocomplete="current-password" required>
+                <input name="code" placeholder="Authenticator or recovery code" required>
+                <button class="btn danger" type="submit">Disable 2FA</button>
+              </form>
+            </div>
+            <div class="card">
+              <h3>Change password</h3>
+              <form id="form-password" class="stack">
+                <input name="current_password" type="password" placeholder="Current password" autocomplete="current-password" required>
+                <input name="new_password" type="password" placeholder="New password (min 10 characters)" minlength="10" autocomplete="new-password" required>
+                <button class="btn" type="submit">Change password</button>
+                <p class="small muted">Common or previously breached passwords are rejected. Changing your password signs out all devices.</p>
+              </form>
+            </div>
+            <div class="card wide">
+              <h3>My security &amp; access log</h3>
+              <ul id="my-audit" class="audit-list"></ul>
+            </div>
+          </div>
+        </div>
+
         <div id="patient-panel" class="hidden">
           <div class="panel-head">
-            <h2 id="patient-name"></h2>
+            <h2><span id="patient-name"></span> <span id="patient-role" class="badge"></span></h2>
             <div class="tabs" role="tablist">
               <button class="tab active" data-tab="monitor">Monitor</button>
               <button class="tab" data-tab="alerts">Alerts <span id="alert-count" class="count hidden"></span></button>
               <button class="tab" data-tab="history">History &amp; data</button>
+              <button class="tab" data-tab="team">Care team</button>
+              <button class="tab owner-only" data-tab="settings">Alarm settings</button>
             </div>
           </div>
 
@@ -90,16 +154,24 @@
                   <label class="check"><input type="checkbox" id="mic-check" checked> Include microphone (voice prosody)</label>
                 </div>
                 <div class="row">
-                  <button id="btn-start" class="btn primary" disabled>Start monitoring</button>
-                  <button id="btn-stop" class="btn" disabled>Stop</button>
-                  <button id="btn-revoke" class="btn danger" disabled>Withdraw consent</button>
+                  <button id="btn-start" class="btn primary editor-only" disabled>Start monitoring</button>
+                  <button id="btn-stop" class="btn editor-only" disabled>Stop</button>
+                  <button id="btn-revoke" class="btn danger editor-only" disabled>Withdraw consent</button>
+                  <button id="btn-recalibrate" class="btn ghost editor-only" disabled title="Capture a new neutral-face baseline">Recalibrate</button>
                 </div>
+                <p id="viewer-note" class="small muted hidden">You have view-only access: live alerts are shown, but monitoring can only be started by editors.</p>
                 <p id="monitor-msg" class="muted small" role="status"></p>
+                <div class="calib hidden" id="calib-box">
+                  <span class="small">Calibrating neutral face… keep the patient at rest</span>
+                  <div class="track"><div id="calib-fill" class="fill info"></div></div>
+                </div>
+                <ul id="quality-chips" class="chips"></ul>
                 <div class="stats-line small muted">
                   <span>Analysis: <b id="m-fps">0</b> fps</span>
                   <span>Face: <b id="m-face">–</b></span>
                   <span>Engine: <b id="m-engine">–</b></span>
                 </div>
+                <button id="btn-notify" class="btn ghost small hidden">Enable desktop notifications for alerts</button>
               </div>
 
               <div class="card">
@@ -108,8 +180,10 @@
                 <div class="kpis">
                   <div class="kpi"><span class="kpi-label">PSPI pain</span><span id="k-pspi" class="kpi-val">–</span><span id="k-pain-level" class="kpi-sub"></span></div>
                   <div class="kpi"><span class="kpi-label">Heart rate (rPPG)</span><span id="k-hr" class="kpi-val">–</span><span id="k-hr-q" class="kpi-sub"></span></div>
+                  <div class="kpi"><span class="kpi-label">Respiration</span><span id="k-rr" class="kpi-val">–</span><span id="k-rr-q" class="kpi-sub"></span></div>
                   <div class="kpi"><span class="kpi-label">Blink / min</span><span id="k-blink" class="kpi-val">–</span><span class="kpi-sub"></span></div>
                   <div class="kpi"><span class="kpi-label">Pattern</span><span id="k-tag" class="kpi-val small-val">–</span><span id="k-tag-conf" class="kpi-sub"></span></div>
+                  <div class="kpi"><span class="kpi-label">PAINAD (sensed items)</span><span id="k-painad" class="kpi-val">–</span><span id="k-painad-sub" class="kpi-sub"></span></div>
                 </div>
                 <div class="bars">
                   <div class="bar"><span>Comfort</span><div class="track"><div id="b-comfort" class="fill good"></div></div><b id="v-comfort">–</b></div>
@@ -146,6 +220,29 @@
                 </form>
                 <p class="small">Note sentiment: <b id="note-state">–</b></p>
               </div>
+
+              <div class="card editor-only">
+                <h3>PAINAD assessment</h3>
+                <p class="small muted">Pain Assessment in Advanced Dementia (Warden et al., 2003). Sensed items are pre-filled
+                  as suggestions; observe the patient for a few minutes (ideally during movement) and confirm every item.</p>
+                <form id="form-painad" class="painad">
+                  <label>Breathing <select name="breathing"></select></label>
+                  <label>Negative vocalisation <select name="negative_vocalization"></select></label>
+                  <label>Facial expression <select name="facial_expression"></select></label>
+                  <label>Body language <select name="body_language"></select></label>
+                  <label>Consolability <select name="consolability"></select></label>
+                  <input name="note" maxlength="300" placeholder="Optional note">
+                  <div class="row between"><b>Total: <span id="painad-total">0</span>/10 <span id="painad-interp" class="muted"></span></b>
+                    <button class="btn primary" type="submit">Record assessment</button></div>
+                </form>
+              </div>
+
+              <div class="card editor-only">
+                <h3>Log care event</h3>
+                <div id="event-buttons" class="chips buttons"></div>
+                <input id="event-note" maxlength="300" placeholder="Optional note (e.g. paracetamol 1 g)">
+                <p class="small muted">Events appear on the history timeline; open one to compare signals before vs. after.</p>
+              </div>
             </div>
           </div>
 
@@ -173,7 +270,23 @@
               </div>
               <div class="chart-box tall"><canvas id="history-chart"></canvas></div>
             </div>
-            <div class="card">
+            <div class="grid">
+              <div class="card">
+                <h3>Care events</h3>
+                <ul id="event-list" class="alert-list"></ul>
+                <div id="impact-box" class="impact hidden"></div>
+              </div>
+              <div class="card">
+                <h3>PAINAD assessments</h3>
+                <ul id="painad-list" class="alert-list"></ul>
+              </div>
+            </div>
+            <div class="card owner-only">
+              <h3>Access log</h3>
+              <p class="small muted">Every view or change of this patient's data (HIPAA §164.312(b) audit controls).</p>
+              <ul id="patient-audit" class="audit-list"></ul>
+            </div>
+            <div class="card owner-only">
               <h3>Data rights</h3>
               <p class="small muted">Export everything stored for this patient (JSON) or permanently erase it.</p>
               <div class="row">
@@ -182,11 +295,54 @@
               </div>
             </div>
           </div>
+
+          <!-- TEAM -->
+          <div data-pane="team" class="pane hidden">
+            <div class="card">
+              <h3>Care team</h3>
+              <ul id="member-list" class="member-list"></ul>
+              <form id="form-member" class="row owner-only">
+                <input name="email" type="email" placeholder="Caregiver's account email" required>
+                <select name="role"><option value="viewer">Viewer (read-only)</option><option value="editor">Editor (can monitor)</option></select>
+                <button class="btn" type="submit">Share</button>
+              </form>
+              <p class="small muted">Viewers see data and live alerts. Editors can also monitor, acknowledge alerts and record
+                assessments/events. Only the owner manages the team, alarm settings, export and deletion.</p>
+            </div>
+          </div>
+
+          <!-- SETTINGS -->
+          <div data-pane="settings" class="pane hidden">
+            <div class="card">
+              <h3>Alarm settings for this patient</h3>
+              <p class="small muted">Adjust thresholds to the individual patient (AACN alarm-management guidance). Changes apply to
+                live monitoring within seconds.</p>
+              <form id="form-settings" class="settings-grid">
+                <label>PSPI moderate <input name="pspi_moderate" type="number" step="0.5" min="1" max="15"></label>
+                <label>PSPI severe <input name="pspi_severe" type="number" step="0.5" min="2" max="16"></label>
+                <label>HR high (bpm) <input name="hr_high" type="number" min="70" max="180"></label>
+                <label>HR low (bpm) <input name="hr_low" type="number" min="30" max="90"></label>
+                <label>Resp. high (/min) <input name="rr_high" type="number" min="14" max="40"></label>
+                <label>Resp. low (/min) <input name="rr_low" type="number" min="4" max="14"></label>
+                <label>Cooldown (s) <input name="cooldown_s" type="number" min="0" max="3600"></label>
+                <label>Persistence (samples) <input name="consecutive" type="number" min="1" max="100"></label>
+                <fieldset class="muted-keys"><legend>Muted alert types</legend><div id="muted-boxes"></div></fieldset>
+                <div class="row"><button class="btn primary" type="submit">Save settings</button></div>
+              </form>
+            </div>
+            <div class="card">
+              <h3>Neutral-face calibration</h3>
+              <p class="small" id="baseline-status"></p>
+              <button id="btn-reset-baseline" class="btn">Reset baseline</button>
+              <p class="small muted">The baseline removes the patient's resting expression from AU scores (offsets are capped so an
+                existing grimace cannot be hidden). Reset if the camera setup changes substantially.</p>
+            </div>
+          </div>
         </div>
       </main>
     </div>
     <footer class="footer small muted">
-      CARE-MM v3 · Research / educational use only · Not FDA-approved · Not a medical device ·
+      CARE-MM v3.1 · Research / educational use only · Not FDA-approved · Not a medical device ·
       Behavioural observations, not emotion detection (Barrett et al., 2019).
     </footer>
   </section>

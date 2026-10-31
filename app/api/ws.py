@@ -33,9 +33,11 @@ from src.care_monitor.logging_utils import get_logger
 from src.care_monitor.pipeline import ProtocolError, SessionPipeline, handshake
 
 from ..core import metrics as m
+from ..core.audit import audit
 from ..core.db import SessionLocal
 from ..core.kv import kv
 from ..core.security import TokenError, decode_token
+from ..deps import role_for
 from ..models import Alert, MonitoringSession, Patient, SessionMetric
 
 router = APIRouter()
@@ -80,11 +82,14 @@ def _ticket(ws: WebSocket, purpose: str) -> Optional[dict[str, Any]]:
 
 
 class _Ingest:
-    def __init__(self, ws: WebSocket, session: MonitoringSession) -> None:
+    def __init__(self, ws: WebSocket, session: MonitoringSession, patient: Patient) -> None:
         self.ws = ws
         self.sid = session.id
+        self.uid = session.user_id
         self.patient_id = session.patient_id
-        self.pipeline = SessionPipeline(str(session.id))
+        self.pipeline = SessionPipeline(str(session.id), baseline=patient.au_baseline,
+                                        alert_config=patient.alert_settings)
+        self.applied_settings = patient.alert_settings
         self.send_lock = asyncio.Lock()
         self.pending_alerts: list[Alert] = []
         self.pending_rollups: list[dict[str, Any]] = []
@@ -115,7 +120,7 @@ class _Ingest:
             await kv.publish(alert_channel(self.patient_id), orjson.dumps({
                 "type": "alert", "id": str(row.id), "session_id": str(self.sid),
                 "patient_id": str(self.patient_id), "key": row.key, "level": row.level,
-                "reason": row.reason, "created_at": now.isoformat(),
+                "reason": row.reason, "created_at": now.isoformat(), "escalated": False,
             }).decode())
         rollup = self.pipeline.pop_rollup()
         if rollup:
@@ -135,7 +140,12 @@ class _Ingest:
                 await self.send({"type": "summary", "text": text, "ts": time.time()})
 
     async def flush(self, final: bool = False) -> bool:
-        """Persist buffered data; returns False if consent is no longer valid."""
+        """Persist buffered data and re-validate the stream.
+
+        Returns False if consent was revoked/expired or the caregiver lost
+        editor access to the patient. Also persists a freshly computed
+        neutral-face baseline and hot-reloads changed alert settings.
+        """
         self.last_flush = time.monotonic()
         if final:
             r = self.pipeline.pop_rollup(force=True)
@@ -144,10 +154,12 @@ class _Ingest:
         alerts, self.pending_alerts = self.pending_alerts, []
         rollups, self.pending_rollups = self.pending_rollups, []
         delta = self.pipeline.sample_count - self.flushed_samples
+        new_baseline = self.pipeline.take_new_baseline()
         try:
             async with SessionLocal() as db:
                 s = await db.get(MonitoringSession, self.sid)
-                if s is None:
+                p = await db.get(Patient, self.patient_id)
+                if s is None or p is None:
                     return False
                 db.add_all(alerts)
                 db.add_all(SessionMetric(
@@ -157,14 +169,22 @@ class _Ingest:
                 if delta:
                     await db.execute(update(MonitoringSession).where(MonitoringSession.id == self.sid)
                                      .values(sample_count=MonitoringSession.sample_count + delta))
+                if new_baseline is not None:
+                    p.au_baseline, p.baseline_updated_at = new_baseline, datetime.now(UTC)
+                role = await role_for(db, self.uid, p)
                 await db.commit()
                 self.flushed_samples += delta
-                return s.consent_valid()
+                if p.alert_settings != self.applied_settings:
+                    self.pipeline.apply_alert_config(p.alert_settings)
+                    self.applied_settings = p.alert_settings
+                return s.consent_valid() and role in ("owner", "editor")
         except Exception as e:
             log.error("flush failed for session %s: %s", self.sid, e)
             # Re-queue (bounded) so a transient DB blip does not lose alerts.
             self.pending_alerts = (alerts + self.pending_alerts)[-200:]
             self.pending_rollups = (rollups + self.pending_rollups)[-60:]
+            if new_baseline is not None:
+                self.pipeline.baseline.fresh = True
             return True
 
 
@@ -177,8 +197,12 @@ async def ws_ingest(ws: WebSocket) -> None:
     uid, sid = claims["_uid"], claims["_sid"]
     async with SessionLocal() as db:
         session = await db.get(MonitoringSession, sid)
-    if session is None or session.user_id != uid:
+        patient = await db.get(Patient, session.patient_id) if session else None
+        role = await role_for(db, uid, patient) if patient else None
+    if session is None or patient is None or session.user_id != uid:
         return await _close(ws, 4404, "session_not_found")
+    if role not in ("owner", "editor"):
+        return await _close(ws, 4403, "forbidden")
     if not session.consent_valid():
         return await _close(ws, 4403, "consent_required")
 
@@ -188,9 +212,12 @@ async def ws_ingest(ws: WebSocket) -> None:
         return await _close(ws, 4429, "too_many_streams")
 
     m.WS_STREAMS.labels("ingest").inc()
-    ing = _Ingest(ws, session)
+    ing = _Ingest(ws, session, patient)
     bucket = _TokenBucket(settings.max_batches_per_second, settings.max_batches_per_second * 2)
     log.info("ingest stream opened session=%s", sid)
+    ip = ws.client.host if ws.client else None
+    await audit("session.stream_open", user_id=uid, patient_id=patient.id, resource_type="session",
+                resource_id=sid, ip=ip)
     close_code, close_reason = 1000, "bye"
     try:
         await ing.send({"type": "hello", "session_id": str(sid), **handshake()})
@@ -217,13 +244,17 @@ async def ws_ingest(ws: WebSocket) -> None:
                     await ing.send({"type": "pong", "ts": time.time()})
                 elif kind == "batch":
                     await ing.handle_batch(msg)
+                elif kind == "recalibrate":
+                    ing.pipeline.recalibrate()
+                    await ing.send({"type": "recalibrating"})
                 else:
                     raise ProtocolError("unknown message type")
             except (ProtocolError, orjson.JSONDecodeError) as e:
                 m.WS_REJECTS.labels("protocol").inc()
                 await ing.send({"type": "error", "code": "protocol", "message": str(e)[:200]})
                 continue
-            if time.monotonic() - ing.last_flush >= FLUSH_INTERVAL_S or ing.pending_alerts:
+            if (time.monotonic() - ing.last_flush >= FLUSH_INTERVAL_S or ing.pending_alerts
+                    or ing.pipeline.baseline.fresh):
                 if not await ing.flush():
                     close_code, close_reason = 4403, "consent_revoked"
                     break
@@ -245,6 +276,9 @@ async def ws_ingest(ws: WebSocket) -> None:
                 await _close(ws, close_code, close_reason)
         finally:
             await asyncio.shield(kv.incr(counter, -1, STREAM_COUNTER_TTL_S))
+            await asyncio.shield(audit("session.stream_close", user_id=uid, patient_id=patient.id,
+                                       resource_type="session", resource_id=sid, ip=ip,
+                                       detail={"samples": ing.pipeline.sample_count}))
 
 
 @router.websocket("/ws/watch")
@@ -256,7 +290,8 @@ async def ws_watch(ws: WebSocket) -> None:
     uid, patient_id = claims["_uid"], claims["_sid"]
     async with SessionLocal() as db:
         p = await db.get(Patient, patient_id)
-    if p is None or p.owner_id != uid:
+        role = await role_for(db, uid, p) if p else None
+    if role is None:
         return await _close(ws, 4404, "patient_not_found")
 
     m.WS_STREAMS.labels("watch").inc()

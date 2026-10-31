@@ -18,6 +18,7 @@ redis==8.1.0
 # Security
 pyjwt==2.15.1
 argon2-cffi==25.1.0
+cryptography==50.0.2
 
 # Signal processing
 numpy==2.5.4

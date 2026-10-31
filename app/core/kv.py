@@ -45,6 +45,8 @@ class KV:
     async def close(self) -> None: ...
     async def ping(self) -> bool: return True
     async def incr_window(self, key: str, window_s: int) -> int: raise NotImplementedError
+    async def get_int(self, key: str) -> int: raise NotImplementedError
+    async def delete(self, key: str) -> None: raise NotImplementedError
     async def incr(self, key: str, delta: int, ttl_s: int) -> int: raise NotImplementedError
     async def acquire_lock(self, key: str, ttl_s: int) -> bool: raise NotImplementedError
     async def publish(self, channel: str, message: str) -> None: raise NotImplementedError
@@ -97,6 +99,13 @@ class MemoryKV(KV):
             val, exp = 0, now + window_s
         self._counters[key] = (val + 1, exp)
         return val + 1
+
+    async def get_int(self, key: str) -> int:
+        val, exp = self._counters.get(key, (0, 0.0))
+        return val if exp > time.monotonic() else 0
+
+    async def delete(self, key: str) -> None:
+        self._counters.pop(key, None)
 
     async def acquire_lock(self, key: str, ttl_s: int) -> bool:
         now = time.monotonic()
@@ -169,6 +178,13 @@ class RedisKV(KV):
             p.incr(key)
             _, val = await p.execute()
         return int(val)
+
+    async def get_int(self, key: str) -> int:
+        v = await self._r.get(key)
+        return int(v) if v else 0
+
+    async def delete(self, key: str) -> None:
+        await self._r.delete(key)
 
     async def acquire_lock(self, key: str, ttl_s: int) -> bool:
         return bool(await self._r.set(key, "1", nx=True, ex=ttl_s))

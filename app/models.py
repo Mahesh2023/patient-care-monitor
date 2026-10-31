@@ -11,7 +11,7 @@ from datetime import datetime, UTC
 from typing import Any, Optional
 
 from sqlalchemy import (
-    JSON, BigInteger, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Uuid,
+    JSON, BigInteger, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Uuid, false,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -36,6 +36,11 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     token_version: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(TZDateTime, default=utcnow)
+    # TOTP 2FA (RFC 6238). Secret is AES-GCM encrypted at rest; recovery codes are SHA-256 digests.
+    totp_secret_enc: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    totp_enabled: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
+    totp_last_step: Mapped[int] = mapped_column(BigInteger, default=0, server_default="0")
+    recovery_codes: Mapped[Optional[list[str]]] = mapped_column(JSON, nullable=True)
 
 
 class RefreshToken(Base):
@@ -54,6 +59,81 @@ class Patient(Base):
     display_name: Mapped[str] = mapped_column(String(80))
     notes: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(TZDateTime, default=utcnow)
+    # Neutral-face AU offsets (per-patient calibration) and per-patient alarm config.
+    au_baseline: Mapped[Optional[dict[str, float]]] = mapped_column(JSON, nullable=True)
+    baseline_updated_at: Mapped[Optional[datetime]] = mapped_column(TZDateTime, nullable=True)
+    alert_settings: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+
+
+class PatientMember(Base):
+    """Care-team sharing. The patient owner is implicit (patients.owner_id)."""
+    __tablename__ = "patient_members"
+    patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True, index=True)
+    role: Mapped[str] = mapped_column(String(16))  # viewer | editor
+    invited_by: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=utcnow)
+
+
+class CareEvent(Base):
+    """Caregiver-logged interventions, used to compare signals before/after."""
+    __tablename__ = "care_events"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    kind: Mapped[str] = mapped_column(String(24))
+    note: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    occurred_at: Mapped[datetime] = mapped_column(TZDateTime, default=utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=utcnow)
+
+    __table_args__ = (Index("ix_care_events_patient_time", "patient_id", "occurred_at"),)
+
+
+class PainadAssessment(Base):
+    """Caregiver-completed PAINAD (Warden et al. 2003); auto items are suggestions only."""
+    __tablename__ = "painad_assessments"
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    patient_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("patients.id", ondelete="CASCADE"))
+    session_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        ForeignKey("monitoring_sessions.id", ondelete="SET NULL"), nullable=True)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    breathing: Mapped[int] = mapped_column(Integer)
+    negative_vocalization: Mapped[int] = mapped_column(Integer)
+    facial_expression: Mapped[int] = mapped_column(Integer)
+    body_language: Mapped[int] = mapped_column(Integer)
+    consolability: Mapped[int] = mapped_column(Integer)
+    total: Mapped[int] = mapped_column(Integer)
+    auto_items: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    note: Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=utcnow)
+
+    __table_args__ = (Index("ix_painad_patient_created", "patient_id", "created_at"),)
+
+
+class AuditEvent(Base):
+    """Append-only audit trail (HIPAA §164.312(b) audit controls).
+
+    No foreign keys on purpose: the trail must survive erasure of the
+    referenced user/patient (ids are pseudonymous; no PII is stored here).
+    """
+    __tablename__ = "audit_events"
+    id: Mapped[int] = mapped_column(BigIntPK, primary_key=True, autoincrement=True)
+    ts: Mapped[datetime] = mapped_column(TZDateTime, default=utcnow)
+    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
+    action: Mapped[str] = mapped_column(String(48))
+    resource_type: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    resource_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    patient_id: Mapped[Optional[uuid.UUID]] = mapped_column(Uuid, nullable=True)
+    success: Mapped[bool] = mapped_column(Boolean, default=True)
+    ip_hash: Mapped[str] = mapped_column(String(32), default="")
+    request_id: Mapped[str] = mapped_column(String(64), default="")
+    detail: Mapped[Optional[dict[str, Any]]] = mapped_column(JSON, nullable=True)
+
+    __table_args__ = (
+        Index("ix_audit_user_ts", "user_id", "ts"),
+        Index("ix_audit_patient_ts", "patient_id", "ts"),
+        Index("ix_audit_ts", "ts"),
+    )
 
 
 class MonitoringSession(Base):
@@ -92,6 +172,7 @@ class Alert(Base):
     acknowledged_at: Mapped[Optional[datetime]] = mapped_column(TZDateTime, nullable=True)
     acknowledged_by: Mapped[Optional[uuid.UUID]] = mapped_column(
         ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    escalated_at: Mapped[Optional[datetime]] = mapped_column(TZDateTime, nullable=True)
 
     __table_args__ = (
         Index("ix_alerts_patient_created", "patient_id", "created_at"),
@@ -112,6 +193,7 @@ class SessionMetric(Base):
     avg_comfort: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     avg_arousal: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     avg_hr: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    avg_rr: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     alerts: Mapped[int] = mapped_column(Integer, default=0)
 
     __table_args__ = (

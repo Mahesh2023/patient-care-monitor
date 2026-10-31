@@ -29,6 +29,8 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
+      - key: DATA_ENCRYPTION_KEY       # encrypts TOTP secrets at rest; never rotate without re-encrypting
+        generateValue: true
       - key: METRICS_TOKEN
         generateValue: true
       - key: WEB_CONCURRENCY

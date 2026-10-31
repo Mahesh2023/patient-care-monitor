@@ -1,4 +1,4 @@
-# CARE-MM v3 — Patient Care Monitor
+# CARE-MM v3.1 — Patient Care Monitor
 
 **Privacy-first, FACS-grounded multimodal distress monitoring for caregivers of non-verbal patients**
 (dementia, ICU, post-stroke aphasia, pediatrics).
@@ -17,6 +17,26 @@
 | Unbounded Prometheus labels (session_id) | Bounded labels, multi-process metrics, structured JSON logs w/ request IDs |
 | — | Strict CSP (no third-party scripts), HSTS, rate limiting, body/WS size limits, GDPR export/erasure, retention enforcement, Alembic migrations, CI, k6 load test |
 
+## v3.1: research-driven improvements
+
+| Area | Feature | Evidence / standard |
+|---|---|---|
+| Signal | **POS heart rate** (Plane-Orthogonal-to-Skin) replaces the green channel | Wang et al. 2017, *IEEE TBME* — cancels illumination changes, less skin-tone dependent |
+| Signal | **Signal-quality gating**: SNR (dB), disturbance-index surges, split-half peak consistency — no BPM shown when quality fails | de Haan & Jeanne 2013; CinC 2017 (DI); CinC 2020 (SQI filter: up to 60% accuracy gain) |
+| Signal | **Respiratory rate** from head motion + respiratory skin-intensity modulation | Samsung Research 2023 (MAE 1.3 bpm); *Electronics* 2025 14(11):2152 |
+| Signal | **Per-patient neutral-face calibration** (first ~20 s, persisted, capped so a grimace cannot be hidden) | Rezaei et al. 2021 *IEEE JBHI*; personalised pain models (EMBC 2021, CVPRW 2017) |
+| Signal | **Capture-quality checks** (lighting, face distance, head pose); facial alerts withheld when poor | Smart-alarm signal-quality principle (AAMI) |
+| Clinical | **PAINAD**: system suggests breathing / vocalisation / facial items; caregiver completes body language & consolability and records the assessment | Warden, Hurley & Volicer 2003, *JAMDA* |
+| Clinical | **Smart alarms**: facial-only pain → CONCERN; corroborated by voice/HR/RR → URGENT; per-patient thresholds & muted keys; respiratory & vocal-distress alerts | AAMI alarm management; AACN Practice Alert; Joint Commission NPSG.06.01.01 |
+| Clinical | **Escalation** of unacknowledged URGENT (5 min) / CONCERN (15 min) alerts to every watcher | AAMI: alarm escalation & closed-loop notification |
+| Caregiver | **Care-team sharing** (owner / editor / viewer, least privilege) | HIPAA minimum-necessary access |
+| Caregiver | **Care events** (medication, repositioning…) with before/after signal comparison | — |
+| Caregiver | **Installable PWA** + desktop notifications for alerts while the tab is in the background | Web App Manifest / Service Worker |
+| Security | **Audit trail** of every patient-data access, per-patient access log, 6-year retention | HIPAA §164.312(b) audit controls |
+| Security | **Password policy**: common-password blocklist, context words, breached-password check (k-anonymity) | OWASP ASVS 5.0 V6.2.4 / NIST SP 800-63B |
+| Security | **Soft account lockout** (per account, not just per IP) | OWASP ASVS V6.1.1 / credential-stuffing cheat sheet |
+| Security | **TOTP two-factor auth** (RFC 6238), AES-GCM-encrypted secrets, replay protection, one-time recovery codes | NIST SP 800-63B AAL2 |
+
 ## Architecture
 
 ```
@@ -26,40 +46,49 @@ Browser (caregiver device)
                                     │  ~2 KB/s JSON batches every 500 ms (no pixels, no audio)
                                     ▼
 Render Web Service (stateless FastAPI, N instances × WEB_CONCURRENCY workers)
-  /ws/ingest ─► SessionPipeline: FACS AUs → PSPI pain → rPPG HR → blink/micro-expr →
-                dimensional distress (comfort/arousal/pain/engagement) → alert engine
+  /ws/ingest ─► SessionPipeline: baseline-adjusted FACS AUs → PSPI pain → POS heart rate
+                (+SQI) → respiratory rate → blink/micro-expr → capture quality →
+                dimensional distress → PAINAD suggestions → smart alert engine
                 → async LLM clinical summary (Groq, optional)
-  /api/*     ─► auth · patients · sessions/consent · alerts · metrics · GDPR export/delete
-  /ws/watch  ─► live alerts for a patient (any device, any instance)
+  /api/*     ─► auth (+TOTP 2FA) · patients · care team · alarm settings · sessions/consent ·
+                alerts · metrics · care events (+impact) · PAINAD · audit · GDPR export/delete
+  /ws/watch  ─► live + escalated alerts for a patient (any device, any instance)
+  background ─► retention (incl. audit) · unacknowledged-alert escalation (distributed locks)
        │                                  │
        ▼                                  ▼
   Render Postgres                    Render Key Value (Redis)
-  users, refresh tokens, patients,   rate-limit counters, alert pub/sub,
-  monitoring_sessions (consent),     per-user stream caps, maintenance lock
-  alerts, session_metrics (1-min)
+  users, refresh tokens, patients,   rate-limit + lockout counters, alert pub/sub,
+  patient_members, sessions,         per-user stream caps, maintenance/escalation locks
+  alerts, session_metrics (1-min),
+  care_events, painad_assessments,
+  audit_events
 ```
 
-Scientific methods are unchanged from v2 (see [RESEARCH.md](RESEARCH.md)): PSPI (Prkachin & Solomon), rPPG (Poh et al. 2010) — now timestamp-resampled for irregular browser frame rates — blink rate (Soukupová & Čech), MAD-based micro-expressions, Russell circumplex for voice/text.
+Core scientific methods (see [RESEARCH.md](RESEARCH.md)): PSPI (Prkachin & Solomon), POS rPPG (Wang et al. 2017) with timestamp resampling for irregular browser frame rates, blink rate (Soukupová & Čech), MAD-based micro-expressions, Russell circumplex for voice/text, PAINAD (Warden et al. 2003).
 
 ## Repository layout
 
 ```
 app/
   main.py              FastAPI app, lifespan, static hosting
-  api/                 auth, patients, sessions (consent, tickets, alert ack), ws, health
-  core/                db, kv (Redis/in-memory), security (argon2/JWT), middleware, metrics
-  services/maintenance.py   retention + session expiry (distributed-lock guarded)
+  api/                 auth (+2FA, audit), patients (settings, baseline, export, access log),
+                       care (team, events, impact, PAINAD), sessions (consent, tickets, ack), ws, health
+  core/                db, kv (Redis/in-memory), security (argon2/JWT), totp (+AES-GCM), passwords,
+                       audit, middleware, metrics
+  services/maintenance.py   retention, session expiry, alert escalation (distributed-lock guarded)
   models.py, schemas.py
-  static/              SPA (vanilla JS modules, no build step); vendor/ fetched at build
+  static/              SPA (vanilla JS modules, no build step), PWA manifest + service worker;
+                       vendor/ fetched at build
 src/care_monitor/
   pipeline.py          SessionPipeline + wire protocol (single source of truth)
-  features/            action_units, pain (PSPI), rppg, blink, micro_expressions, voice, text_sentiment
-  inference/           distress_state, alerts, llm_reasoner
+  features/            action_units, baseline, pain (PSPI), rppg (POS + SQI), respiration, blink,
+                       micro_expressions, voice, text_sentiment
+  inference/           distress_state, alerts (smart alarms), painad, llm_reasoner
   perception/          head_pose, iris_gaze
-alembic/               migrations (advisory-locked on Postgres)
+alembic/               migrations 0001-0002 (advisory-locked on Postgres)
 scripts/               fetch_assets.py (hash-pinned vendor assets), start.sh (migrate + serve)
 loadtest/ingest.js     k6 streaming load test
-tests/                 67 unit + integration tests (HTTP + WebSocket)
+tests/                 94 unit + integration tests (HTTP + WebSocket)
 render.yaml            Render Blueprint: web + Postgres + Key Value
 ```
 
@@ -88,7 +117,9 @@ pytest
 1. Push to GitHub (this repo).
 2. Render Dashboard → **New → Blueprint** → select the repo → **Apply**.
    This creates `care-mm` (web, Docker), `care-mm-db` (Postgres) and `care-mm-kv` (Key Value),
-   wires `DATABASE_URL` / `REDIS_URL`, and generates `JWT_SECRET` / `METRICS_TOKEN`.
+   wires `DATABASE_URL` / `REDIS_URL`, and generates `JWT_SECRET`, `DATA_ENCRYPTION_KEY` and `METRICS_TOKEN`.
+   (Existing Blueprint deploys: click **Sync** so the new `DATA_ENCRYPTION_KEY` is created — production refuses
+   to start without it. Never rotate it without re-encrypting stored TOTP secrets.)
 3. Optional: set `GROQ_API_KEY` on the `care-mm` service to enable LLM clinical summaries.
 4. Open `https://<service>.onrender.com`, create an account, add a patient, start monitoring.
 
@@ -107,7 +138,8 @@ expires after 30 days, 0.1 CPU / 512 MB. See [docs/SCALING.md](docs/SCALING.md) 
 | `GET /docs` | OpenAPI UI (disabled in production) |
 
 Key environment variables: see [.env.example](.env.example) and `src/care_monitor/config.py`.
-Production refuses to start with a weak/missing `JWT_SECRET`, SQLite, insecure cookies or wildcard CORS.
+Production refuses to start with a weak/missing `JWT_SECRET` or `DATA_ENCRYPTION_KEY`, SQLite, insecure
+cookies or wildcard CORS.
 
 ## Privacy & security model
 
@@ -117,12 +149,20 @@ Production refuses to start with a weak/missing `JWT_SECRET`, SQLite, insecure c
 - Only per-minute aggregates and alerts are persisted; retention enforced automatically
   (`METRICS_RETENTION_DAYS`, `ALERTS_RETENTION_DAYS`).
 - GDPR: per-patient JSON export, patient erasure, full account erasure (FK cascades).
+- Role-based care-team access (owner / editor / viewer); access revocation stops live streams within 5 s.
+- Append-only audit trail of patient-data access (survives erasure; pseudonymous ids only), 6-year retention.
+- Optional TOTP 2FA; common/breached passwords rejected; per-account soft lockout.
 - Strict CSP with all scripts/WASM self-hosted and hash-pinned; HSTS; `X-Frame-Options: DENY`.
+- The service worker caches only the static app shell — API responses are never cached.
 
 ## Limitations
 
 - AU estimates come from MediaPipe blendshapes, not certified FACS coding.
-- rPPG is sensitive to lighting, motion, skin tone and camera compression — trend use only.
+- rPPG (POS) and respiration are sensitive to lighting, motion, skin tone, camera compression and
+  elevated heart rates (npj Digit. Med. 2025) — trend use only; values are hidden when quality gates fail.
+- PAINAD items suggested by the system are aids; the score is only valid when a caregiver completes the
+  observation (body language and consolability cannot be sensed from a face camera).
+- Before/after comparisons around care events are observational, not evidence of treatment effect.
 - Voice/text analysis are transparent rule-based models, not clinically validated classifiers.
 - Pain expression varies across individuals and cultures; stoic patients may under-express.
 

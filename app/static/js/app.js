@@ -1,6 +1,8 @@
-// CARE-MM SPA controller: auth, patients, on-device monitoring, alerts, history.
-import { api, ApiError, login, logout, refresh, register, wsUrl } from "./api.js";
+// CARE-MM SPA controller: auth (+2FA), patients, on-device monitoring, alerts,
+// PAINAD, care events, care team, alarm settings, history, audit.
+import { api, ApiError, login, logout, refresh, register, verifyMfa, wsUrl } from "./api.js";
 import { VoiceTap } from "./audio.js";
+import * as X from "./features.js";
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, props = {}, text) => {
@@ -49,13 +51,49 @@ async function onAuthSubmit(ev) {
   $("auth-error").textContent = "";
   $("auth-submit").disabled = true;
   try {
-    if (state.authMode === "login") await login(f.email.value.trim(), f.password.value);
-    else await register(f.email.value.trim(), f.password.value, f.full_name.value.trim());
-    f.password.value = "";
+    if (state.authMode === "login") {
+      const mfa = await login(f.email.value.trim(), f.password.value);
+      f.password.value = "";
+      if (mfa) { state.mfaToken = mfa; showMfa(true); return; }
+    } else {
+      await register(f.email.value.trim(), f.password.value, f.full_name.value.trim());
+      f.password.value = "";
+    }
     await enterApp();
   } catch (e) {
     $("auth-error").textContent = e instanceof ApiError ? e.message : "Network error";
   } finally { $("auth-submit").disabled = false; }
+}
+
+function showMfa(on) {
+  $("form-auth").classList.toggle("hidden", on);
+  $("form-mfa").classList.toggle("hidden", !on);
+  document.querySelector("#view-auth .tabs").classList.toggle("hidden", on);
+  $("mfa-error").textContent = "";
+  if (on) $("form-mfa").code.focus();
+}
+
+async function onMfaSubmit(ev) {
+  ev.preventDefault();
+  try {
+    await verifyMfa(state.mfaToken, ev.target.code.value.trim());
+    ev.target.reset(); state.mfaToken = null; showMfa(false);
+    await enterApp();
+  } catch (e) {
+    $("mfa-error").textContent = e instanceof ApiError ? e.message : "Network error";
+    if (e instanceof ApiError && e.status === 401 && /expired/.test(e.message)) { /* token may be stale */ }
+  }
+}
+
+const RANK = { viewer: 1, editor: 2, owner: 3 };
+function canDo(minRole) { return state.patient && RANK[state.patient.role || "owner"] >= RANK[minRole]; }
+function applyRoleVisibility() {
+  const role = (state.patient && state.patient.role) || "owner";
+  document.querySelectorAll(".owner-only").forEach((n) => n.classList.toggle("hidden", role !== "owner"));
+  document.querySelectorAll(".editor-only").forEach((n) => n.classList.toggle("hidden", role === "viewer"));
+  $("viewer-note").classList.toggle("hidden", role !== "viewer");
+  const b = $("patient-role");
+  b.textContent = role; b.className = `badge role-${role}`;
 }
 
 async function enterApp() {
@@ -70,6 +108,9 @@ async function doLogout() {
   closeWatch();
   await logout().catch(() => {});
   state.user = null; state.patient = null;
+  for (const id of ["patient-panel", "account-panel"]) $(id).classList.add("hidden");
+  $("empty-state").classList.remove("hidden");
+  showMfa(false);
   show("view-auth");
 }
 
@@ -84,7 +125,7 @@ function renderPatients() {
   ul.replaceChildren();
   if (!state.patients.length) ul.append(el("li", { className: "muted" }, "No patients yet."));
   for (const p of state.patients) {
-    const li = el("li", { tabIndex: 0 }, p.display_name);
+    const li = el("li", { tabIndex: 0 }, p.display_name + (p.role && p.role !== "owner" ? ` · ${p.role}` : ""));
     if (state.patient && state.patient.id === p.id) li.classList.add("active");
     li.addEventListener("click", () => selectPatient(p));
     li.addEventListener("keydown", (e) => { if (e.key === "Enter") selectPatient(p); });
@@ -100,9 +141,12 @@ async function selectPatient(p) {
   state.patient = p;
   renderPatients();
   $("empty-state").classList.add("hidden");
+  $("account-panel").classList.add("hidden");
   $("patient-panel").classList.remove("hidden");
   $("patient-name").textContent = p.display_name;
+  applyRoleVisibility();
   resetMonitorUI();
+  X.resetPainad();
   setTab("monitor");
   state.unack = 0; updateUnack();
   openWatch();
@@ -126,7 +170,9 @@ function setTab(tab) {
   document.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
   document.querySelectorAll("[data-pane]").forEach((p) => p.classList.toggle("hidden", p.dataset.pane !== tab));
   if (tab === "alerts") loadAlerts(true);
-  if (tab === "history") loadHistory();
+  if (tab === "history") { loadHistory(); X.loadHistoryExtras(state.patient, canDo("owner")); }
+  if (tab === "team") X.loadTeam(state.patient);
+  if (tab === "settings") X.loadSettings(state.patient);
 }
 
 // ============================ LIVE ALERT WATCH ============================
@@ -146,9 +192,10 @@ async function openWatch(attempt = 0) {
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
       if (msg.type !== "alert") return;
-      state.unack += 1; updateUnack();
-      if (!state.mon) pushLiveAlert(msg);  // monitor view shows its own stream
-      if (msg.level === "urgent") toast(`URGENT: ${msg.reason}`, 8000);
+      if (!msg.escalated) { state.unack += 1; updateUnack(); }
+      if (!state.mon || msg.escalated) pushLiveAlert(msg);  // monitor view shows its own stream
+      if (msg.level === "urgent") toast(`${msg.escalated ? "ESCALATED" : "URGENT"}: ${msg.reason}`, 8000);
+      X.notify(msg, p.display_name);
     };
     ws.onclose = () => {
       if (state.watch === ws && state.patient === p) setTimeout(() => openWatch(attempt + 1), Math.min(30000, 1000 * 2 ** attempt));
@@ -246,6 +293,7 @@ class Monitor {
           setConn("streaming", true); resolve();
         } else if (msg.type === "result") renderResult(msg.data);
         else if (msg.type === "summary") renderSummary(msg.text);
+        else if (msg.type === "recalibrating") setMsg("Recalibrating neutral face — keep the patient at rest for ~20 s.");
         else if (msg.type === "throttled") { /* server back-pressure: next flush carries more */ }
         else if (msg.type === "error") {
           console.warn("server:", msg);
@@ -337,6 +385,7 @@ function updateMonitorButtons() {
   $("btn-start").disabled = running || !$("consent-check").checked;
   $("btn-stop").disabled = !running;
   $("btn-revoke").disabled = !running;
+  $("btn-recalibrate").disabled = !running;
   $("consent-check").disabled = running;
   $("mic-check").disabled = running;
 }
@@ -365,9 +414,11 @@ async function stopMonitoring(opts) {
 }
 
 function resetMonitorUI() {
-  for (const id of ["k-pspi", "k-hr", "k-blink", "k-tag", "v-comfort", "v-arousal", "v-pain", "v-engagement",
-    "voice-state", "note-state", "head-pose", "gaze"]) $(id).textContent = "–";
-  for (const id of ["k-pain-level", "k-hr-q", "k-tag-conf", "voice-detail"]) $(id).textContent = "";
+  for (const id of ["k-pspi", "k-hr", "k-rr", "k-painad", "k-blink", "k-tag", "v-comfort", "v-arousal", "v-pain",
+    "v-engagement", "voice-state", "note-state", "head-pose", "gaze"]) $(id).textContent = "–";
+  for (const id of ["k-pain-level", "k-hr-q", "k-rr-q", "k-painad-sub", "k-tag-conf", "voice-detail"]) $(id).textContent = "";
+  $("quality-chips").replaceChildren();
+  $("calib-box").classList.add("hidden");
   for (const id of ["b-comfort", "b-arousal", "b-pain", "b-engagement"]) $(id).style.width = "0";
   $("summary").textContent = "Awaiting signals…"; $("summary").classList.remove("live");
   $("observations").replaceChildren(); $("active-aus").replaceChildren();
@@ -411,9 +462,32 @@ function renderResult(d) {
     }
   }
   if (d.heart_rate && d.heart_rate.quality) {
-    const ok = d.heart_rate.quality !== "poor";
-    $("k-hr").textContent = ok ? d.heart_rate.bpm.toFixed(0) : "–";
-    $("k-hr-q").textContent = `signal ${d.heart_rate.quality}${d.heart_rate.is_abnormal ? " · " + d.heart_rate.abnormality : ""}`;
+    const h = d.heart_rate, ok = h.quality !== "poor";
+    $("k-hr").textContent = ok ? h.bpm.toFixed(0) : "–";
+    $("k-hr-q").textContent = `${h.method || ""} · signal ${h.quality}${h.snr_db !== undefined ? ` (SNR ${h.snr_db.toFixed(1)} dB)` : ""}`
+      + (h.is_abnormal ? ` · ${h.abnormality}` : "");
+  }
+  if (d.respiration && d.respiration.quality) {
+    const r = d.respiration, ok = r.quality !== "poor";
+    $("k-rr").textContent = ok ? r.brpm.toFixed(0) : "–";
+    $("k-rr-q").textContent = `/min · ${r.quality}${r.source ? ` (${r.source})` : ""}${r.is_abnormal ? ` · ${r.abnormality}` : ""}`;
+  }
+  if (d.calibration && d.calibration.state) {
+    const calibrating = d.calibration.state === "calibrating";
+    $("calib-box").classList.toggle("hidden", !calibrating);
+    $("calib-fill").style.width = `${Math.round(d.calibration.progress * 100)}%`;
+  }
+  if (d.quality && d.quality.lighting) {
+    const labels = { dark: "too dark", bright: "overexposed", too_far: "face too far", turned_away: "head turned away" };
+    const items = ["lighting", "face_size", "pose"].map((k) => d.quality[k]).filter((v) => v !== "ok");
+    $("quality-chips").replaceChildren(...(items.length
+      ? items.map((v) => el("li", { className: "q-bad" }, labels[v] || v))
+      : [el("li", { className: "q-ok" }, "capture quality OK")]));
+  }
+  if (d.painad && d.painad.items) {
+    $("k-painad").textContent = `${d.painad.auto_total}`;
+    $("k-painad-sub").textContent = `${d.painad.auto_items_scored}/5 items sensed · caregiver completes rest`;
+    X.suggestPainad(d.painad.items);
   }
   if (d.voice && d.voice.vocal_state) {
     $("voice-state").textContent = d.voice.vocal_state;
@@ -434,12 +508,12 @@ function renderSummary(text) {
 }
 
 function alertItem(a, withAck) {
-  const li = el("li", { className: a.level });
+  const li = el("li", { className: a.level + (a.escalated || a.escalated_at ? " escalated" : "") });
   const meta = el("div", { className: "meta" });
-  meta.append(el("span", {}, `${a.level.toUpperCase()} · ${a.key.replaceAll("_", " ")}`),
+  meta.append(el("span", {}, `${a.escalated ? "ESCALATED · " : ""}${a.level.toUpperCase()} · ${a.key.replaceAll("_", " ")}`),
     el("span", {}, fmtTime(a.created_at)));
   li.append(meta, el("div", {}, a.reason));
-  if (withAck && a.id) {
+  if (withAck && a.id && canDo("editor")) {
     if (a.acknowledged_at) li.append(el("div", { className: "meta" }, `acknowledged ${fmtTime(a.acknowledged_at)}`));
     else {
       const b = el("button", { className: "btn ghost ack" }, "Acknowledge");
@@ -496,6 +570,7 @@ async function loadHistory() {
       { label: "Max PSPI", data: rows.map((r) => r.max_pspi), borderColor: "#f59e0b", yAxisID: "y", pointRadius: 0, borderDash: [4, 4] },
       { label: "Comfort", data: rows.map((r) => r.avg_comfort), borderColor: "#10b981", yAxisID: "y1", pointRadius: 0 },
       { label: "Heart rate", data: rows.map((r) => r.avg_hr), borderColor: "#38bdf8", yAxisID: "y2", pointRadius: 0, hidden: true },
+      { label: "Respiration", data: rows.map((r) => r.avg_rr), borderColor: "#a78bfa", yAxisID: "y2", pointRadius: 0, hidden: true },
     ],
   };
   if (historyChart) { historyChart.data = data; historyChart.update(); return; }
@@ -506,7 +581,7 @@ async function loadHistory() {
         x: { ticks: { color: "#8a96bd", maxTicksLimit: 8 }, grid: { color: "rgba(255,255,255,.05)" } },
         y: { min: 0, max: 16, position: "left", title: { display: true, text: "PSPI", color: "#8a96bd" }, ticks: { color: "#8a96bd" } },
         y1: { min: 0, max: 1, position: "right", grid: { drawOnChartArea: false }, ticks: { color: "#8a96bd" } },
-        y2: { display: false, min: 40, max: 160 },
+        y2: { display: false, min: 0, max: 160 },
       },
       plugins: { legend: { labels: { color: "#e6ecff" } } } },
   });
@@ -531,19 +606,51 @@ async function deletePatient() {
     closeWatch();
     await api(`/api/patients/${p.id}`, { method: "DELETE" });
     state.patients = state.patients.filter((x) => x.id !== p.id);
-    state.patient = null;
-    renderPatients();
-    $("patient-panel").classList.add("hidden");
-    $("empty-state").classList.remove("hidden");
+    deselectPatient();
     toast("Patient data deleted.");
   } catch (e) { toast(e.message); }
+}
+
+function deselectPatient() {
+  closeWatch();
+  state.patient = null;
+  renderPatients();
+  $("patient-panel").classList.add("hidden");
+  $("empty-state").classList.remove("hidden");
+}
+
+async function leftPatient() {  // called after the user removed themself from a care team
+  await stopMonitoring();
+  await loadPatients();
+  deselectPatient();
 }
 
 // ============================ WIRING ============================
 function wire() {
   document.querySelectorAll("[data-auth-tab]").forEach((b) => b.addEventListener("click", () => setAuthMode(b.dataset.authTab)));
   $("form-auth").addEventListener("submit", onAuthSubmit);
+  $("form-mfa").addEventListener("submit", onMfaSubmit);
+  $("mfa-cancel").addEventListener("click", () => { state.mfaToken = null; showMfa(false); });
   $("btn-logout").addEventListener("click", doLogout);
+  $("btn-account").addEventListener("click", () => {
+    $("patient-panel").classList.add("hidden"); $("empty-state").classList.add("hidden");
+    $("account-panel").classList.remove("hidden");
+    X.loadAccount();
+  });
+  $("btn-account-close").addEventListener("click", () => {
+    $("account-panel").classList.add("hidden");
+    $(state.patient ? "patient-panel" : "empty-state").classList.remove("hidden");
+  });
+  $("btn-recalibrate").addEventListener("click", () => {
+    if (state.mon) state.mon.send({ type: "recalibrate" });
+  });
+  X.init({
+    state, toast, el, $, fmtTime, canDo,
+    currentSessionId: () => (state.mon && state.mon.session ? state.mon.session.id : null),
+    refreshUser: async () => { state.user = await api("/api/auth/me"); return state.user; },
+    onLeftPatient: leftPatient,
+    onSignedOut: doLogout,
+  });
   $("form-patient").addEventListener("submit", onAddPatient);
   document.querySelectorAll("[data-tab]").forEach((b) => b.addEventListener("click", () => setTab(b.dataset.tab)));
   $("consent-check").addEventListener("change", updateMonitorButtons);
@@ -577,6 +684,9 @@ function wire() {
 async function boot() {
   wire();
   setAuthMode("login");
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((e) => console.warn("SW registration failed", e));
+  }
   if (await refresh()) {
     try { await enterApp(); return; } catch (_) { /* fall through */ }
   }
