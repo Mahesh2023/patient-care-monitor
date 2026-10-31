@@ -1,0 +1,20 @@
+line-length = 120
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[lint]
+select = ["E", "F", "W", "B", "I", "UP", "ASYNC", "S"]
+ignore = [
+  "B008",   # FastAPI Depends() in defaults
+  "S101",   # assert in tests
+  "S104",   # bind 0.0.0.0 is intended in containers
+  "E501",
+  "UP007", "UP045", "UP042",
+  "I001",
+  "E702",   # legacy research modules use compact `a; b` statements
+]
+
+[lint.per-file-ignores]
+"tests/*" = ["S", "B", "E712"]
+"scripts/*" = ["S310"]
+"src/care_monitor/features/text_sentiment.py" = ["F841"]

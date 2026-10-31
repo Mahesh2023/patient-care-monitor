@@ -15,7 +15,6 @@ from __future__ import annotations
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from typing import Deque, Dict, List
 
 import numpy as np
 
@@ -37,9 +36,9 @@ class MicroExpressionDetector:
         self.min_frames = min_frames
         self.max_frames = max_frames
         self.frame_ms = frame_ms
-        self._history: Dict[str, Deque[float]] = defaultdict(
+        self._history: dict[str, deque[float]] = defaultdict(
             lambda: deque(maxlen=baseline_window))
-        self._active: Dict[str, Dict] = {}
+        self._active: dict[str, dict] = {}
 
     def _robust_threshold(self, au: str) -> float:
         hist = np.asarray(self._history[au], dtype=np.float64)
@@ -49,9 +48,9 @@ class MicroExpressionDetector:
         mad = float(np.median(np.abs(hist - med))) + 1e-6
         return med + self.k_mad * 1.4826 * mad  # 1.4826 -> MAD-to-sigma for Gaussian
 
-    def add_frame(self, aus: Dict[str, float]) -> List[MicroEvent]:
-        events: List[MicroEvent] = []
-        now = time.time()
+    def add_frame(self, aus: dict[str, float], now: float | None = None) -> list[MicroEvent]:
+        events: list[MicroEvent] = []
+        now = time.time() if now is None else now
         for au, v in aus.items():
             self._history[au].append(v)
             thresh = self._robust_threshold(au)

@@ -8,6 +8,18 @@ venv/
 .venv/
 env/
 
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Local databases
+*.db
+*.db-journal
+
+# Vendored frontend assets (fetched + hash-verified by scripts/fetch_assets.py)
+app/static/vendor/
+
 # IDE
 .vscode/
 .idea/
@@ -18,14 +30,9 @@ env/
 .DS_Store
 Thumbs.db
 
-# Session logs (generated at runtime)
-data/session_logs/*.jsonl
-
-# Logs
-data/logs/*.log
-
-# Pytest
+# Tooling
 .pytest_cache/
+.ruff_cache/
 .coverage
 htmlcov/
 

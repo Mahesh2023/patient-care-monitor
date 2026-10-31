@@ -16,7 +16,6 @@ multimodal features. This is what clinical audit committees can review.
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
 
 from ..features.pain import PainAssessment, PainLevel
 
@@ -28,7 +27,7 @@ class DistressState:
     pain: float = 0.0
     engagement: float = 0.5
     # Behavioural observations (strings — inspectable by caregivers)
-    observations: List[str] = field(default_factory=list)
+    observations: list[str] = field(default_factory=list)
     # Qualitative cognitive tag (for dashboard chips, never "true emotion")
     behavioural_tag: str = "neutral"
     confidence: float = 0.0
@@ -40,13 +39,13 @@ class DistressState:
 _AU_ON = 0.15
 
 
-def _on(aus: Dict[str, float], key: str) -> bool:
+def _on(aus: dict[str, float], key: str) -> bool:
     return float(aus.get(key, 0.0)) > _AU_ON
 
 
-def _behavioural_tag(aus: Dict[str, float], head_pose: Dict[str, float],
-                     gaze: Dict[str, float], blink_rpm: float,
-                     pain_level: PainLevel) -> Tuple[str, float]:
+def _behavioural_tag(aus: dict[str, float], head_pose: dict[str, float],
+                     gaze: dict[str, float], blink_rpm: float,
+                     pain_level: PainLevel) -> tuple[str, float]:
     """Return (tag, confidence) — rule-based, most-specific-first.
 
     Tags are *behavioural*, not emotional. A tag of 'grimace_pattern' does
@@ -81,15 +80,15 @@ def _behavioural_tag(aus: Dict[str, float], head_pose: Dict[str, float],
 
 
 def infer_distress(
-    aus: Dict[str, float],
-    head_pose: Dict[str, float],
-    gaze: Dict[str, float],
+    aus: dict[str, float],
+    head_pose: dict[str, float],
+    gaze: dict[str, float],
     blink_rpm: float,
     pain: PainAssessment,
     heart_rate_bpm: float = 0.0,
     timestamp: float = 0.0,
 ) -> DistressState:
-    obs: List[str] = []
+    obs: list[str] = []
 
     # Pain (0-16 PSPI -> [0,1])
     pain_norm = float(min(1.0, max(0.0, pain.pspi / 16.0)))

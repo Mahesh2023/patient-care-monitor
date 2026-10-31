@@ -14,7 +14,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Deque, Dict, List, Optional
+from typing import Optional
 
 from .distress_state import DistressState
 from ..features.pain import PainAssessment, PainLevel
@@ -33,7 +33,7 @@ class Alert:
     key: str
     level: AlertLevel
     reason: str
-    evidence: Dict[str, float] = field(default_factory=dict)
+    evidence: dict[str, float] = field(default_factory=dict)
     timestamp: float = 0.0
 
 
@@ -41,9 +41,9 @@ class AlertEngine:
     def __init__(self, cooldown_s: float = 30.0, consecutive: int = 5) -> None:
         self.cooldown_s = cooldown_s
         self.consecutive = consecutive
-        self._last_fired: Dict[str, float] = {}
-        self._streak: Dict[str, int] = defaultdict(int)
-        self._history: Deque[Alert] = deque(maxlen=200)
+        self._last_fired: dict[str, float] = {}
+        self._streak: dict[str, int] = defaultdict(int)
+        self._history: deque[Alert] = deque(maxlen=200)
 
     def _gate(self, key: str, now: float) -> bool:
         """Increment the streak; only pass once it reaches the threshold AND
@@ -63,9 +63,10 @@ class AlertEngine:
     def evaluate(self,
                  distress: DistressState,
                  pain: PainAssessment,
-                 hr: Optional[HeartRateResult]) -> List[Alert]:
-        now = time.time()
-        fired: List[Alert] = []
+                 hr: Optional[HeartRateResult],
+                 now: Optional[float] = None) -> list[Alert]:
+        now = time.time() if now is None else now
+        fired: list[Alert] = []
 
         # --- Severe pain ---
         if pain.level == PainLevel.SEVERE:
@@ -140,5 +141,5 @@ class AlertEngine:
             self._history.append(a)
         return fired
 
-    def history(self, n: int = 50) -> List[Alert]:
+    def history(self, n: int = 50) -> list[Alert]:
         return list(self._history)[-n:]

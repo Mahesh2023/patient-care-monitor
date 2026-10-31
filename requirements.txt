@@ -1,32 +1,30 @@
-# CARE-MM v2.0 dependencies. Pinned to versions known to build on
-# Render free tier (python 3.12, CPU-only).
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-websockets==13.0.1
-python-multipart==0.0.9
-pydantic>=2.9.0
-pydantic-settings>=2.6.0
-python-dotenv==1.0.1
+# CARE-MM production runtime dependencies (Python 3.12).
+# Pinned to releases published >= 7 days before pinning (supply-chain hygiene).
+# Face perception runs in the browser (MediaPipe Tasks-Vision WASM), so the
+# server needs no mediapipe / opencv / GPU.
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+pydantic==2.14.1
+pydantic-settings==2.16.1
+email-validator==2.3.0
+orjson==3.13.0
 
-# Perception
-mediapipe>=0.10.0
-opencv-python-headless>=4.8.0
-numpy>=1.24.0
-scipy>=1.10.0
-pillow==10.4.0
+# Data layer
+sqlalchemy[asyncio]==2.1.6
+asyncpg==0.32.0
+alembic==1.20.1
+redis==8.1.0
 
-# LLM
-httpx==0.27.2
-groq==0.11.0
+# Security
+pyjwt==2.15.1
+argon2-cffi==25.1.0
+
+# Signal processing
+numpy==2.5.4
+scipy==1.18.1
+
+# LLM (OpenAI-compatible HTTP; no vendor SDK)
+httpx==0.28.1
 
 # Observability
-prometheus-client==0.21.0
-
-# Tests
-pytest==8.3.0
-pytest-asyncio==0.24.0
-
-# Additional dependencies
-streamlit>=1.28.0
-psutil>=5.9.0
-pandas>=2.0.0
+prometheus-client==0.26.0

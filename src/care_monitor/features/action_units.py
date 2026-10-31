@@ -14,11 +14,10 @@ score fully inspectable — a hard requirement for clinical deployment.
 """
 from __future__ import annotations
 from collections import deque
-from typing import Deque, Dict, List, Set
 
 import numpy as np
 
-BLENDSHAPE_TO_AU: Dict[str, List[str]] = {
+BLENDSHAPE_TO_AU: dict[str, list[str]] = {
     "AU1":  ["browInnerUp"],
     "AU2":  ["browOuterUpLeft", "browOuterUpRight"],
     "AU4":  ["browDownLeft", "browDownRight"],
@@ -41,8 +40,12 @@ BLENDSHAPE_TO_AU: Dict[str, List[str]] = {
     "AU45": ["eyeBlinkLeft", "eyeBlinkRight"],
 }
 
+# Canonical wire order for the browser -> server blendshape vector. The server
+# sends this list to the client on connect, so there is a single source of truth.
+BLENDSHAPE_NAMES: list[str] = sorted({n for names in BLENDSHAPE_TO_AU.values() for n in names})
+
 # Per-AU signal amplification, clipped to [0,1]. Values < 1 attenuate.
-AU_AMPLIFICATION: Dict[str, float] = {
+AU_AMPLIFICATION: dict[str, float] = {
     "AU1": 2.0, "AU2": 1.8, "AU4": 2.0, "AU5": 2.0, "AU6": 2.0, "AU7": 3.0,
     "AU9": 3.0, "AU10": 2.5, "AU12": 3.0, "AU14": 2.2, "AU15": 3.0,
     "AU17": 2.0, "AU20": 3.0, "AU23": 2.0, "AU24": 2.0, "AU25": 1.0,
@@ -53,10 +56,18 @@ AU_AMPLIFICATION: Dict[str, float] = {
 AU_THRESHOLD: float = 0.15
 
 
-def extract_action_units(blendshapes) -> Dict[str, float]:
+def extract_action_units(blendshapes) -> dict[str, float]:
     """Blendshapes: iterable of MediaPipe Category objects (category_name, score)."""
-    bs = {b.category_name: float(b.score) for b in blendshapes}
-    out: Dict[str, float] = {}
+    return action_units_from_scores({b.category_name: float(b.score) for b in blendshapes})
+
+
+def action_units_from_vector(vec) -> dict[str, float]:
+    """Wire-format vector (ordered as BLENDSHAPE_NAMES) -> AU intensities."""
+    return action_units_from_scores(dict(zip(BLENDSHAPE_NAMES, vec, strict=True)))
+
+
+def action_units_from_scores(bs: dict[str, float]) -> dict[str, float]:
+    out: dict[str, float] = {}
     for au, names in BLENDSHAPE_TO_AU.items():
         vals = [bs.get(n, 0.0) for n in names]
         score = float(np.mean(vals)) if vals else 0.0
@@ -67,7 +78,7 @@ def extract_action_units(blendshapes) -> Dict[str, float]:
     return out
 
 
-def active_aus(aus: Dict[str, float], thresh: float = AU_THRESHOLD) -> Set[str]:
+def active_aus(aus: dict[str, float], thresh: float = AU_THRESHOLD) -> set[str]:
     return {k for k, v in aus.items() if v > thresh}
 
 
@@ -81,10 +92,10 @@ class TemporalSmoother:
     def __init__(self, alpha: float = 0.3, window_size: int = 5) -> None:
         self.alpha = float(np.clip(alpha, 0.05, 0.95))
         self.window_size = window_size
-        self.history: Deque[Dict[str, float]] = deque(maxlen=window_size)
-        self.current: Dict[str, float] = {}
+        self.history: deque[dict[str, float]] = deque(maxlen=window_size)
+        self.current: dict[str, float] = {}
 
-    def update(self, new_aus: Dict[str, float]) -> Dict[str, float]:
+    def update(self, new_aus: dict[str, float]) -> dict[str, float]:
         self.history.append(dict(new_aus))
         if not self.current:
             self.current = dict(new_aus)

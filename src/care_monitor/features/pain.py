@@ -16,7 +16,6 @@ from __future__ import annotations
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Deque, Dict, List, Optional
 
 import numpy as np
 
@@ -34,7 +33,7 @@ class PainAssessment:
     pspi_raw: float = 0.0
     level: PainLevel = PainLevel.NONE
     confidence: float = 0.0
-    contributing_aus: Dict[str, float] = field(default_factory=dict)
+    contributing_aus: dict[str, float] = field(default_factory=dict)
     trend: str = "stable"        # increasing, decreasing, stable, insufficient_data
     timestamp: float = 0.0
 
@@ -49,9 +48,9 @@ class PSPIDetector:
         self.moderate = moderate
         self.severe = severe
         self.window = window
-        self._history: Deque[float] = deque(maxlen=window)
+        self._history: deque[float] = deque(maxlen=window)
 
-    def compute(self, aus: Dict[str, float]) -> float:
+    def compute(self, aus: dict[str, float]) -> float:
         """Raw PSPI on the [0, 16] scale."""
         def s(au: str) -> float:
             return float(aus.get(au, 0.0)) * 5.0  # [0,1] -> [0,5] FACS-like
@@ -79,7 +78,7 @@ class PSPIDetector:
             return "decreasing"
         return "stable"
 
-    def assess(self, aus: Dict[str, float], timestamp: float = 0.0) -> PainAssessment:
+    def assess(self, aus: dict[str, float], timestamp: float = 0.0) -> PainAssessment:
         raw = self.compute(aus)
         self._history.append(raw)
         if len(self._history) >= 3:

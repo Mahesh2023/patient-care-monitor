@@ -1,148 +1,131 @@
-# Patient Care Monitor
+# CARE-MM v3 — Patient Care Monitor
 
-**A scientifically-grounded multimodal monitoring system for caregivers**
+**Privacy-first, FACS-grounded multimodal distress monitoring for caregivers of non-verbal patients**
+(dementia, ICU, post-stroke aphasia, pediatrics).
 
-> **Live Demo:** [https://fa5353ef4297ce.lhr.life](https://fa5353ef4297ce.lhr.life)
+> Research / educational use only. Not FDA-approved. Not a medical device.
+> Outputs are *behavioural observations*, not emotion detection (Barrett et al., 2019).
 
-This system combines facial analysis, pain detection, heart rate estimation, voice analysis, and text sentiment to provide caregivers with real-time patient comfort and distress assessment.
+## What changed in v3 (production architecture)
+
+| v2 | v3 |
+|---|---|
+| Browser uploads JPEG frames (~50 KB/s); server runs MediaPipe per frame → ~5 users / CPU core | **Face perception runs in the browser** (MediaPipe Tasks-Vision WASM, self-hosted). Only ~2 KB/s of numeric features are sent → hundreds–thousands of streams / core |
+| In-memory sessions & consent (lost on restart, single instance only) | **Postgres** (users, patients, consent audit, alerts, per-minute metrics) + **Redis/Key Value** (rate limits, cross-instance alert fan-out, distributed locks). Stateless web tier — scale horizontally |
+| No authentication, CORS `*` | **JWT auth** (argon2id, 15-min access tokens, rotating httpOnly refresh cookies with reuse detection), per-user data isolation |
+| Synchronous LLM call on the event loop | Async LLM with per-process concurrency cap, circuit breaker, per-session cooldown |
+| Unbounded Prometheus labels (session_id) | Bounded labels, multi-process metrics, structured JSON logs w/ request IDs |
+| — | Strict CSP (no third-party scripts), HSTS, rate limiting, body/WS size limits, GDPR export/erasure, retention enforcement, Alembic migrations, CI, k6 load test |
 
 ## Architecture
 
 ```
-Camera Feed ──→ Face Analysis (MediaPipe) ──→ Action Unit Estimation
-                      │                              │
-                      ├── Forehead ROI ──→ rPPG (Heart Rate)
-                      │                              │
-                      └── AU Estimates ──→ Pain Detection (PSPI)
-                                                     │
-Audio Input ──→ Voice Analysis ──────────────────────┤
-                                                     │
-Text Input ──→ Text Sentiment ───────────────────────┤
-                                                     ▼
-                                          Multimodal Fusion Engine
-                                                     │
-                                          ┌──────────┴──────────┐
-                                          ▼                     ▼
-                                   Alert System          Dashboard / UI
-                                          │
-                                   Session Logger
+Browser (caregiver device)
+  camera ─► MediaPipe FaceLandmarker (WASM, on-device) ─► blendshapes, head-pose matrix,
+  mic    ─► AudioWorklet ─► prosody features (pitch/energy/centroid)    iris landmarks, forehead RGB
+                                    │  ~2 KB/s JSON batches every 500 ms (no pixels, no audio)
+                                    ▼
+Render Web Service (stateless FastAPI, N instances × WEB_CONCURRENCY workers)
+  /ws/ingest ─► SessionPipeline: FACS AUs → PSPI pain → rPPG HR → blink/micro-expr →
+                dimensional distress (comfort/arousal/pain/engagement) → alert engine
+                → async LLM clinical summary (Groq, optional)
+  /api/*     ─► auth · patients · sessions/consent · alerts · metrics · GDPR export/delete
+  /ws/watch  ─► live alerts for a patient (any device, any instance)
+       │                                  │
+       ▼                                  ▼
+  Render Postgres                    Render Key Value (Redis)
+  users, refresh tokens, patients,   rate-limit counters, alert pub/sub,
+  monitoring_sessions (consent),     per-user stream caps, maintenance lock
+  alerts, session_metrics (1-min)
 ```
 
-## Modules
+Scientific methods are unchanged from v2 (see [RESEARCH.md](RESEARCH.md)): PSPI (Prkachin & Solomon), rPPG (Poh et al. 2010) — now timestamp-resampled for irregular browser frame rates — blink rate (Soukupová & Čech), MAD-based micro-expressions, Russell circumplex for voice/text.
 
-| Module | File | Method | Scientific Basis |
-|--------|------|--------|-----------------|
-| Face Analysis | `modules/face_analyzer.py` | MediaPipe Face Mesh 468-point landmarks → geometric AU estimation | FACS (Ekman & Friesen, 1978) |
-| Pain Detection | `modules/pain_detector.py` | PSPI = AU4 + max(AU6,AU7) + max(AU9,AU10) + AU43 | Prkachin & Solomon; Lucey et al. (2011) |
-| Heart Rate (rPPG) | `modules/rppg_estimator.py` | Green-channel temporal filtering + FFT from forehead ROI | Poh, McDuff & Picard (2010) |
-| Voice Analysis | `modules/voice_analyzer.py` | Pitch (autocorrelation), energy, spectral centroid | Schuller et al. (2018) |
-| Text Sentiment | `modules/text_sentiment.py` | Domain-specific medical/care lexicon + negation handling | Russell (1980) dimensional model |
-| Fusion Engine | `modules/fusion_engine.py` | Confidence-weighted late fusion with temporal smoothing | Poria et al. (2017) |
-| Alert System | `alerts/alert_system.py` | Cooldown + consecutive-frame threshold | Clinical alert fatigue literature |
-| Dashboard | `dashboard.py` | Streamlit real-time visualization | — |
+## Repository layout
 
-## Key Design Decisions
+```
+app/
+  main.py              FastAPI app, lifespan, static hosting
+  api/                 auth, patients, sessions (consent, tickets, alert ack), ws, health
+  core/                db, kv (Redis/in-memory), security (argon2/JWT), middleware, metrics
+  services/maintenance.py   retention + session expiry (distributed-lock guarded)
+  models.py, schemas.py
+  static/              SPA (vanilla JS modules, no build step); vendor/ fetched at build
+src/care_monitor/
+  pipeline.py          SessionPipeline + wire protocol (single source of truth)
+  features/            action_units, pain (PSPI), rppg, blink, micro_expressions, voice, text_sentiment
+  inference/           distress_state, alerts, llm_reasoner
+  perception/          head_pose, iris_gaze
+alembic/               migrations (advisory-locked on Postgres)
+scripts/               fetch_assets.py (hash-pinned vendor assets), start.sh (migrate + serve)
+loadtest/ingest.js     k6 streaming load test
+tests/                 67 unit + integration tests (HTTP + WebSocket)
+render.yaml            Render Blueprint: web + Postgres + Key Value
+```
 
-### 1. No Naive Emotion Labels
-Per **Barrett et al. (2019, PMID: 31313636)** — the landmark review in *Psychological Science in the Public Interest* — facial configurations do NOT reliably map 1:1 to discrete emotions. A furrowed brow can mean anger, concentration, confusion, or pain. This system reports:
-- **Action Units** (what muscles are doing)
-- **Dimensional states** (comfort, arousal, pain levels on continuous scales)
-- **Behavioral observations** (what we see, not what we interpret)
-
-### 2. Privacy-First
-- All processing runs locally on-device
-- No data is sent to any cloud service
-- Raw video is never saved by default
-- Session logs contain numerical data only, no images
-
-### 3. Transparent and Explainable
-- Rule-based methods (not black-box ML) for core analysis
-- Every threshold has a scientific citation
-- Confidence scores accompany all outputs
-- Alert reasons are always stated explicitly
-
-### 4. Supplement, Not Replace
-This is a monitoring aid for caregivers. It does NOT:
-- Diagnose medical conditions
-- Replace professional clinical assessment
-- Provide medical advice
-- Claim to "read minds" or detect specific emotions reliably
-
-## Quick Start
+## Local development
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Demo mode (no camera needed)
-python monitor.py --demo
-
-# Real-time camera monitoring
-python monitor.py
-
-# Dashboard (requires streamlit)
-streamlit run dashboard.py
-
-# Process a video file
-python monitor.py --video recording.mp4
+python -m venv .venv && . .venv/bin/activate         # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
+python scripts/fetch_assets.py                        # MediaPipe WASM + model + Chart.js (sha256-verified)
+cp .env.example .env                                  # defaults: SQLite, in-memory KV, COOKIE_SECURE=false
+python -m alembic upgrade head
+uvicorn app.main:app --reload --port 8000             # open http://localhost:8000
 ```
 
-## Output Dimensions
+Camera access requires a secure context: `http://localhost` works; any other host needs HTTPS.
 
-The system produces these continuous scores (not discrete emotion labels):
+Checks:
 
-| Dimension | Range | Meaning |
-|-----------|-------|---------|
-| **Comfort Level** | 0-1 | 0 = very uncomfortable, 1 = very comfortable |
-| **Arousal Level** | 0-1 | 0 = unresponsive/calm, 1 = very agitated |
-| **Pain Level** | 0-1 | Based on PSPI (0-16 scale, normalized) |
-| **Engagement** | 0-1 | 0 = not facing camera, 1 = eyes open, engaged |
-| **Heart Rate** | bpm | Estimated via rPPG (not medical-grade) |
+```bash
+ruff check .
+pytest
+```
 
-## Alert Levels
+## Deploy to Render (free tier)
 
-| Level | Meaning | Example Trigger |
-|-------|---------|-----------------|
-| **Normal** | No concerns | All indicators nominal |
-| **Attention** | Worth noting | Heart rate slightly elevated |
-| **Concern** | Should check | Moderate pain + vocal distress |
-| **Urgent** | Immediate attention | Severe pain indicators sustained |
+1. Push to GitHub (this repo).
+2. Render Dashboard → **New → Blueprint** → select the repo → **Apply**.
+   This creates `care-mm` (web, Docker), `care-mm-db` (Postgres) and `care-mm-kv` (Key Value),
+   wires `DATABASE_URL` / `REDIS_URL`, and generates `JWT_SECRET` / `METRICS_TOKEN`.
+3. Optional: set `GROQ_API_KEY` on the `care-mm` service to enable LLM clinical summaries.
+4. Open `https://<service>.onrender.com`, create an account, add a patient, start monitoring.
 
-Alerts have:
-- **Cooldown period** (30s default) to prevent alert fatigue
-- **Consecutive frame threshold** (5 frames) to prevent false positives
-- **Reason attribution** — always states why the alert fired
+Migrations run automatically on boot (`scripts/start.sh`). Pushes to `main` auto-deploy.
 
-## Scientific References
+**Free-tier limits:** the web service sleeps after 15 min idle (≈1 min cold start), free Postgres
+expires after 30 days, 0.1 CPU / 512 MB. See [docs/SCALING.md](docs/SCALING.md) for the path to 1M+ users.
 
-1. **Barrett, L.F., et al.** (2019). Emotional Expressions Reconsidered: Challenges to Inferring Emotion From Human Facial Movements. *Psychological Science in the Public Interest*, 20(1), 1-68. PMID: 31313636
+## Operations
 
-2. **Coles, N.A., et al.** (2019). A multi-lab registered replication of the facial feedback hypothesis. *Nature Human Behaviour*. PMID: 30973236
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | Liveness (Render health check) |
+| `GET /ready` | Readiness: DB + KV reachable (503 otherwise) |
+| `GET /metrics` | Prometheus; requires `Authorization: Bearer $METRICS_TOKEN` when set |
+| `GET /docs` | OpenAPI UI (disabled in production) |
 
-3. **Ekman, P., & Friesen, W.V.** (1978). *Facial Action Coding System: A Technique for the Measurement of Facial Movement*. Consulting Psychologists Press.
+Key environment variables: see [.env.example](.env.example) and `src/care_monitor/config.py`.
+Production refuses to start with a weak/missing `JWT_SECRET`, SQLite, insecure cookies or wildcard CORS.
 
-4. **Lucey, P., et al.** (2011). Painful data: The UNBC-McMaster shoulder pain expression archive database. *IEEE International Conference on Automatic Face & Gesture Recognition*.
+## Privacy & security model
 
-5. **Poh, M.Z., McDuff, D.J., & Picard, R.W.** (2010). Non-contact, automated cardiac pulse measurements using video imaging and blind source separation. *Optics Express*, 18(10), 10762-10774.
-
-6. **Poria, S., et al.** (2017). A review of affective computing: From unimodal analysis to multimodal fusion. *Information Fusion*, 37, 98-125.
-
-7. **Prkachin, K.M.** (1992). The consistency of facial expressions of pain: a comparison across modalities. *Pain*, 51(3), 297-306.
-
-8. **Russell, J.A.** (1980). A circumplex model of affect. *Journal of Personality and Social Psychology*, 39(6), 1161-1178.
-
-9. **Schuller, B., et al.** (2018). Speech emotion recognition: Two decades in a nutshell, benchmarks, and ongoing trends. *Communications of the ACM*.
-
-10. **Soukupova, T., & Cech, J.** (2016). Eye blink detection using facial landmarks. *21st Computer Vision Winter Workshop*.
+- Raw video/audio **never leaves the browser**; the server receives numeric features only.
+- Explicit per-session consent (24 h TTL), auditable and revocable; revocation stops the stream within 5 s.
+- Pseudonymous patients (display name only); client IPs stored as HMAC digests.
+- Only per-minute aggregates and alerts are persisted; retention enforced automatically
+  (`METRICS_RETENTION_DAYS`, `ALERTS_RETENTION_DAYS`).
+- GDPR: per-patient JSON export, patient erasure, full account erasure (FK cascades).
+- Strict CSP with all scripts/WASM self-hosted and hash-pinned; HSTS; `X-Frame-Options: DENY`.
 
 ## Limitations
 
-- **AU estimation from landmarks** is less precise than EMG-based FACS coding or purpose-trained neural networks. Geometric approximations provide useful signals but are not certified FACS scores.
-- **rPPG heart rate** is affected by lighting, movement, camera quality, and skin tone. It should not be used for clinical diagnosis.
-- **Voice analysis** uses simple signal processing. Production systems should consider deep learning models trained on clinical datasets.
-- **Pain expression varies** across individuals, cultures, and conditions. Some patients suppress pain displays (stoicism bias).
-- **The system cannot detect internal states directly.** Per Barrett et al. (2019), all facial readings are behavioral observations, not windows into the mind.
+- AU estimates come from MediaPipe blendshapes, not certified FACS coding.
+- rPPG is sensitive to lighting, motion, skin tone and camera compression — trend use only.
+- Voice/text analysis are transparent rule-based models, not clinically validated classifiers.
+- Pain expression varies across individuals and cultures; stoic patients may under-express.
 
 ## License
 
-For research and educational purposes. Not FDA-approved for clinical use.
+Research and educational use. Not for clinical decision-making.

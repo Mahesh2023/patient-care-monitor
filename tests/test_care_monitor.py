@@ -6,11 +6,9 @@ from __future__ import annotations
 import time
 import math
 
-import pytest
 
 from src.care_monitor.features.action_units import (
     AU_THRESHOLD, TemporalSmoother, active_aus, extract_action_units,
-    BLENDSHAPE_TO_AU,
 )
 from src.care_monitor.features.blink import BlinkTracker
 from src.care_monitor.features.micro_expressions import MicroExpressionDetector

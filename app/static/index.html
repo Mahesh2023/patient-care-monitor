@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CARE-MM · Patient Care Monitor</title>
+  <link rel="stylesheet" href="/static/css/app.css?v=3.0.0">
+  <script src="/static/vendor/chart.umd.min.js" defer></script>
+  <script type="module" src="/static/js/app.js?v=3.0.0"></script>
+</head>
+<body>
+  <noscript>CARE-MM requires JavaScript.</noscript>
+
+  <!-- ================= AUTH ================= -->
+  <section id="view-auth" class="view hidden" aria-labelledby="auth-title">
+    <div class="auth-card card">
+      <h1 id="auth-title">CARE-MM</h1>
+      <p class="muted">Privacy-first multimodal patient monitoring for caregivers.
+        Video and audio are analysed <strong>on this device</strong>; only numeric signals leave the browser.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-auth-tab="login" role="tab" aria-selected="true">Sign in</button>
+        <button class="tab" data-auth-tab="register" role="tab" aria-selected="false">Create account</button>
+      </div>
+      <form id="form-auth" autocomplete="on" novalidate>
+        <label class="reg-only hidden">Full name
+          <input name="full_name" maxlength="120" autocomplete="name">
+        </label>
+        <label>Email
+          <input name="email" type="email" required autocomplete="email">
+        </label>
+        <label>Password
+          <input name="password" type="password" required minlength="10" autocomplete="current-password">
+          <small class="reg-only hidden muted">At least 10 characters.</small>
+        </label>
+        <button type="submit" class="btn primary" id="auth-submit">Sign in</button>
+        <p id="auth-error" class="error" role="alert"></p>
+      </form>
+      <p class="disclaimer">Research / educational use only. Not FDA-approved. Not a medical device.</p>
+    </div>
+  </section>
+
+  <!-- ================= APP ================= -->
+  <section id="view-app" class="view hidden">
+    <header class="topbar">
+      <div class="brand">CARE-MM <span class="badge">v3</span></div>
+      <div class="topbar-right">
+        <span id="conn-status" class="pill">idle</span>
+        <span id="user-email" class="muted"></span>
+        <button id="btn-logout" class="btn ghost">Sign out</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar card">
+        <h2>Patients</h2>
+        <ul id="patient-list" class="patient-list" aria-label="Patients"></ul>
+        <form id="form-patient" class="stack">
+          <input name="display_name" placeholder="Patient display name / pseudonym" maxlength="80" required>
+          <button class="btn" type="submit">Add patient</button>
+        </form>
+        <p class="muted small">Use a pseudonym. Do not enter identifiers such as MRN or date of birth.</p>
+      </aside>
+
+      <main class="main">
+        <div id="empty-state" class="card center muted">Select or add a patient to begin.</div>
+
+        <div id="patient-panel" class="hidden">
+          <div class="panel-head">
+            <h2 id="patient-name"></h2>
+            <div class="tabs" role="tablist">
+              <button class="tab active" data-tab="monitor">Monitor</button>
+              <button class="tab" data-tab="alerts">Alerts <span id="alert-count" class="count hidden"></span></button>
+              <button class="tab" data-tab="history">History &amp; data</button>
+            </div>
+          </div>
+
+          <!-- MONITOR -->
+          <div data-pane="monitor" class="pane">
+            <div class="grid">
+              <div class="card video-card">
+                <div class="video-wrap">
+                  <video id="video" playsinline muted></video>
+                  <canvas id="sample-canvas" class="hidden"></canvas>
+                  <div id="video-overlay" class="overlay">Camera off</div>
+                </div>
+                <div class="consent">
+                  <label class="check"><input type="checkbox" id="consent-check">
+                    I confirm informed consent has been obtained from the patient or their legal representative
+                    for camera/microphone-based monitoring (consent expires after 24 h and can be withdrawn at any time).</label>
+                  <label class="check"><input type="checkbox" id="mic-check" checked> Include microphone (voice prosody)</label>
+                </div>
+                <div class="row">
+                  <button id="btn-start" class="btn primary" disabled>Start monitoring</button>
+                  <button id="btn-stop" class="btn" disabled>Stop</button>
+                  <button id="btn-revoke" class="btn danger" disabled>Withdraw consent</button>
+                </div>
+                <p id="monitor-msg" class="muted small" role="status"></p>
+                <div class="stats-line small muted">
+                  <span>Analysis: <b id="m-fps">0</b> fps</span>
+                  <span>Face: <b id="m-face">–</b></span>
+                  <span>Engine: <b id="m-engine">–</b></span>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Clinical summary</h3>
+                <p id="summary" class="summary muted">Awaiting signals…</p>
+                <div class="kpis">
+                  <div class="kpi"><span class="kpi-label">PSPI pain</span><span id="k-pspi" class="kpi-val">–</span><span id="k-pain-level" class="kpi-sub"></span></div>
+                  <div class="kpi"><span class="kpi-label">Heart rate (rPPG)</span><span id="k-hr" class="kpi-val">–</span><span id="k-hr-q" class="kpi-sub"></span></div>
+                  <div class="kpi"><span class="kpi-label">Blink / min</span><span id="k-blink" class="kpi-val">–</span><span class="kpi-sub"></span></div>
+                  <div class="kpi"><span class="kpi-label">Pattern</span><span id="k-tag" class="kpi-val small-val">–</span><span id="k-tag-conf" class="kpi-sub"></span></div>
+                </div>
+                <div class="bars">
+                  <div class="bar"><span>Comfort</span><div class="track"><div id="b-comfort" class="fill good"></div></div><b id="v-comfort">–</b></div>
+                  <div class="bar"><span>Arousal</span><div class="track"><div id="b-arousal" class="fill warn"></div></div><b id="v-arousal">–</b></div>
+                  <div class="bar"><span>Pain</span><div class="track"><div id="b-pain" class="fill bad"></div></div><b id="v-pain">–</b></div>
+                  <div class="bar"><span>Engagement</span><div class="track"><div id="b-engagement" class="fill info"></div></div><b id="v-engagement">–</b></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h3>Trend</h3>
+                <div class="chart-box"><canvas id="trend-chart"></canvas></div>
+              </div>
+
+              <div class="card">
+                <h3>Live alerts</h3>
+                <ul id="live-alerts" class="alert-list"><li class="muted">No alerts.</li></ul>
+              </div>
+
+              <div class="card">
+                <h3>Observations</h3>
+                <ul id="observations" class="chips"></ul>
+                <h4>Active Action Units</h4>
+                <ul id="active-aus" class="chips"></ul>
+                <p class="small muted">Head pose: <span id="head-pose">–</span> · Gaze averted: <span id="gaze">–</span></p>
+              </div>
+
+              <div class="card">
+                <h3>Voice &amp; caregiver notes</h3>
+                <p class="small">Voice state: <b id="voice-state">–</b> <span id="voice-detail" class="muted"></span></p>
+                <form id="form-note" class="stack">
+                  <textarea name="note" rows="2" maxlength="2000" placeholder="e.g. Patient says their back hurts"></textarea>
+                  <button class="btn" type="submit">Add note to analysis</button>
+                </form>
+                <p class="small">Note sentiment: <b id="note-state">–</b></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ALERTS -->
+          <div data-pane="alerts" class="pane hidden">
+            <div class="card">
+              <div class="row between">
+                <h3>Alert history</h3>
+                <label class="check small"><input type="checkbox" id="only-unack"> Unacknowledged only</label>
+              </div>
+              <ul id="alert-history" class="alert-list"></ul>
+              <button id="btn-more-alerts" class="btn ghost hidden">Load more</button>
+            </div>
+          </div>
+
+          <!-- HISTORY -->
+          <div data-pane="history" class="pane hidden">
+            <div class="card">
+              <div class="row between">
+                <h3>Last 24 hours (per-minute aggregates)</h3>
+                <select id="history-hours">
+                  <option value="6">6 h</option><option value="24" selected>24 h</option>
+                  <option value="72">3 days</option><option value="168">7 days</option>
+                </select>
+              </div>
+              <div class="chart-box tall"><canvas id="history-chart"></canvas></div>
+            </div>
+            <div class="card">
+              <h3>Data rights</h3>
+              <p class="small muted">Export everything stored for this patient (JSON) or permanently erase it.</p>
+              <div class="row">
+                <button id="btn-export" class="btn">Export data</button>
+                <button id="btn-delete-patient" class="btn danger">Delete patient &amp; all data</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+    <footer class="footer small muted">
+      CARE-MM v3 · Research / educational use only · Not FDA-approved · Not a medical device ·
+      Behavioural observations, not emotion detection (Barrett et al., 2019).
+    </footer>
+  </section>
+
+  <div id="toast" class="toast hidden" role="status"></div>
+</body>
+</html>

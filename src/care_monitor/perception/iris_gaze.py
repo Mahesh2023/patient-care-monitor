@@ -5,7 +5,6 @@ horizontal/vertical ratios as a coarse gaze direction signal — robust enough
 for "gaze aversion" flagging without needing a calibrated eye tracker.
 """
 from __future__ import annotations
-from typing import Dict, List
 
 # Left eye outer/inner corner and iris center indices (MediaPipe 478 mesh)
 L_EYE_OUTER, L_EYE_INNER = 33, 133
@@ -13,14 +12,35 @@ R_EYE_OUTER, R_EYE_INNER = 263, 362
 L_IRIS = [468, 469, 470, 471, 472]
 R_IRIS = [473, 474, 475, 476, 477]
 
+# Wire order of the landmark subset the browser sends (x, y pairs).
+GAZE_LANDMARKS: list[int] = [L_EYE_OUTER, L_EYE_INNER, R_EYE_OUTER, R_EYE_INNER, *L_IRIS, *R_IRIS]
 
-def _iris_center(lms, idx: List[int]):
+
+class _Pt:
+    __slots__ = ("x", "y")
+
+    def __init__(self, x: float, y: float) -> None:
+        self.x, self.y = x, y
+
+
+class SparseLandmarks:
+    """Index-addressable view over the sparse landmark subset from the client."""
+
+    def __init__(self, flat_xy) -> None:
+        self._pts = {idx: _Pt(float(flat_xy[2 * i]), float(flat_xy[2 * i + 1]))
+                     for i, idx in enumerate(GAZE_LANDMARKS)}
+
+    def __getitem__(self, idx: int) -> _Pt:
+        return self._pts[idx]
+
+
+def _iris_center(lms, idx: list[int]):
     xs = [lms[i].x for i in idx]
     ys = [lms[i].y for i in idx]
     return sum(xs) / len(xs), sum(ys) / len(ys)
 
 
-def estimate_gaze(lms) -> Dict[str, float]:
+def estimate_gaze(lms) -> dict[str, float]:
     """Return {h_ratio, v_ratio, averted} in normalized coords.
 
     h_ratio ~ 0.5 means iris centered. <0.35 or >0.65 is sideways gaze.
@@ -42,5 +62,5 @@ def estimate_gaze(lms) -> Dict[str, float]:
         return {"h_ratio": 0.5, "v_ratio": 0.0, "averted": False}
 
 
-def gaze_aversion(gaze: Dict[str, float]) -> bool:
+def gaze_aversion(gaze: dict[str, float]) -> bool:
     return bool(gaze.get("averted", False))

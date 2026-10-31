@@ -1,12 +1,11 @@
 """Head pose (pitch/yaw/roll) from MediaPipe facial transformation matrix."""
 from __future__ import annotations
 import math
-from typing import Dict
 
 import numpy as np
 
 
-def head_pose_from_matrix(mat4: np.ndarray) -> Dict[str, float]:
+def head_pose_from_matrix(mat4: np.ndarray) -> dict[str, float]:
     """Decompose 4x4 facial transformation matrix into Euler angles (degrees).
 
     Returns a dict with pitch, yaw, roll. Convention: MediaPipe Tasks returns
@@ -28,7 +27,12 @@ def head_pose_from_matrix(mat4: np.ndarray) -> Dict[str, float]:
     return {"pitch": float(pitch), "yaw": float(yaw), "roll": float(roll)}
 
 
-def head_stable(head_pose: Dict[str, float], yaw_thresh: float = 20.0,
+def head_pose_from_column_major(data) -> dict[str, float]:
+    """MediaPipe JS `Matrix.data` is a column-major flat 16-vector."""
+    return head_pose_from_matrix(np.asarray(data, dtype=np.float64).reshape(4, 4).T)
+
+
+def head_stable(head_pose: dict[str, float], yaw_thresh: float = 20.0,
                 pitch_thresh: float = 15.0) -> bool:
     return (abs(head_pose.get("yaw", 0.0)) < yaw_thresh
             and abs(head_pose.get("pitch", 0.0)) < pitch_thresh)

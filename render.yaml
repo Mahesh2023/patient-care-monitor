@@ -1,25 +1,64 @@
-# Render blueprint — single-service, Docker build.
-# Deploy: push to GitHub → Render → New → Blueprint → pick this repo.
+# Render Blueprint — CARE-MM v3 (free tier).
+# Deploy: Render Dashboard -> New -> Blueprint -> select this repo -> Apply.
+#
+# Free-tier caveats: web service sleeps after 15 min idle (cold start ~1 min),
+# free Postgres expires 30 days after creation, free Key Value has no
+# persistence (only rate-limit counters / pub-sub live there — safe to lose).
+# To scale: change plans below (e.g. web: standard + `scaling:` autoscaling,
+# database: basic-1gb+, keyvalue: starter) — no code changes required.
 services:
   - type: web
     name: care-mm
     runtime: docker
     plan: free
+    region: oregon
     dockerfilePath: ./Dockerfile
     healthCheckPath: /health
-    # NOTE: Do NOT set PORT here. Render injects it automatically and the
-    # Dockerfile's CMD uses ${PORT:-8000}, so it "just works" both locally
-    # and on Render.
+    autoDeployTrigger: commit
     envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: care-mm-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: care-mm-kv
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: METRICS_TOKEN
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: "2"
+      - key: DB_POOL_SIZE
+        value: "3"
+      - key: DB_MAX_OVERFLOW
+        value: "2"
       - key: LLM_PROVIDER
         value: groq
       - key: LLM_MODEL
         value: llama-3.3-70b-versatile
       - key: GROQ_API_KEY
-        sync: false           # set in Render dashboard; never committed
+        sync: false            # optional: set in the Render dashboard; LLM summaries are disabled without it
       - key: ENABLE_LLM_REASONING
         value: "true"
       - key: LOG_LEVEL
         value: INFO
-      - key: MODEL_DIR
-        value: /app/models    # matches the Dockerfile pre-download location
+
+  - type: keyvalue
+    name: care-mm-kv
+    plan: free
+    region: oregon
+    ipAllowList: []            # private network only
+    maxmemoryPolicy: allkeys-lru
+
+databases:
+  - name: care-mm-db
+    plan: free
+    region: oregon
+    databaseName: care_mm
+    user: care_mm
+    ipAllowList: []            # private network only

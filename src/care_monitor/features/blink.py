@@ -7,7 +7,6 @@ but applied to MediaPipe's AU45 blendshape instead of EAR landmarks
 from __future__ import annotations
 import time
 from collections import deque
-from typing import Deque
 
 
 class BlinkTracker:
@@ -16,7 +15,7 @@ class BlinkTracker:
         self.min_gap_s = min_gap_s
         self._closed = False
         self._last_blink_t = 0.0
-        self._events: Deque[float] = deque(maxlen=120)  # 2 minutes worth
+        self._events: deque[float] = deque(maxlen=120)  # 2 minutes worth
 
     def update(self, au45: float, now: float | None = None) -> bool:
         now = time.time() if now is None else now
